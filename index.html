@@ -27,12 +27,17 @@
             font-size: 0.75rem;
             font-weight: 500;
         }
+        /* Modal thumbnail active border */
+        .thumbnail-active {
+            border-color: #4f46e5; /* indigo-600 */
+            outline: 2px solid #4f46e5;
+        }
     </style>
 </head>
 <body class="text-gray-800">
 
     <!-- Header -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
+    <header class="bg-white shadow-md sticky top-0 z-40">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="text-2xl font-bold text-gray-800">
                 <a href="#">Style<span class="text-indigo-600">Hub</span></a>
@@ -40,7 +45,7 @@
             <div class="hidden md:flex space-x-8">
                 <a href="#hot-items" class="text-gray-600 hover:text-indigo-600">熱門服裝</a>
                 <a href="#in-stock" class="text-gray-600 hover:text-indigo-600">現貨服裝</a>
-                <a href="#" class="text-gray-600 hover:text-indigo-600">關於我們</a>
+                <a href="#contact" class="text-gray-600 hover:text-indigo-600">聯絡我們</a>
             </div>
             <div class="md:hidden">
                 <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
@@ -52,7 +57,7 @@
         <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
             <a href="#hot-items" class="block py-2 text-gray-600 hover:text-indigo-600">熱門服裝</a>
             <a href="#in-stock" class="block py-2 text-gray-600 hover:text-indigo-600">現貨服裝</a>
-            <a href="#" class="block py-2 text-gray-600 hover:text-indigo-600">關於我們</a>
+            <a href="#contact" class="block py-2 text-gray-600 hover:text-indigo-600">聯絡我們</a>
         </div>
     </header>
 
@@ -94,6 +99,17 @@
                 <p>目前所有現貨商品皆已售罄，敬請期待補貨！</p>
             </div>
         </section>
+        
+        <!-- 聯絡我們 Section -->
+        <section id="contact" class="bg-white p-8 rounded-lg shadow-md">
+            <h2 class="text-3xl font-bold text-center mb-2">聯絡我們</h2>
+            <p class="text-center text-gray-500 mb-8">有任何問題或合作提案？歡迎隨時與我們聯繫！</p>
+            <div class="max-w-xl mx-auto text-center">
+                 <p class="text-lg mb-2"><i class="fas fa-envelope mr-2 text-indigo-500"></i>電子郵件: <a href="mailto:hello@stylehub.com" class="text-indigo-600 hover:underline">hello@stylehub.com</a></p>
+                 <p class="text-lg mb-2"><i class="fas fa-phone mr-2 text-indigo-500"></i>客服電話: <a href="tel:02-1234-5678" class="text-indigo-600 hover:underline">02-1234-5678</a></p>
+                 <p class="text-lg"><i class="fas fa-map-marker-alt mr-2 text-indigo-500"></i>公司地址: 台北市信義區時尚路123號</p>
+            </div>
+        </section>
 
     </main>
 
@@ -107,10 +123,41 @@
         </div>
     </footer>
     
+    <!-- === 商品圖片瀏覽 Modal === -->
+    <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl m-4 max-w-4xl w-full relative transform scale-95 transition-transform duration-300">
+            <!-- Close Button -->
+            <button id="modal-close-button" class="absolute -top-4 -right-4 bg-white text-gray-700 w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-200 hover:text-black focus:outline-none z-10">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <div class="p-4 md:p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Main Image -->
+                    <div class="lg:col-span-2">
+                        <img id="modal-main-image" src="" alt="Product Detail" class="w-full h-auto max-h-[75vh] object-contain rounded-md bg-gray-100">
+                    </div>
+                    <!-- Product Info & Thumbnails -->
+                    <div class="flex flex-col">
+                        <div>
+                             <h3 id="modal-product-name" class="text-2xl font-bold text-gray-800 mb-2"></h3>
+                             <p id="modal-product-price" class="text-xl font-medium text-indigo-600 mb-4"></p>
+                             <p id="modal-product-description" class="text-gray-600 mb-6"></p>
+                        </div>
+                        <div class="mt-auto">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">不同角度</p>
+                             <div id="modal-thumbnails" class="flex gap-2 pb-2 overflow-x-auto">
+                                <!-- Thumbnail images will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // --- 資料管理 ---
-        // 為了模擬前後台分離但共用資料庫，我們使用瀏覽器的 localStorage
-        
+        // 為了展示多圖功能，我們更新了資料結構
         const initialProducts = [
              {
                 id: 1,
@@ -118,8 +165,11 @@
                 sku: 'SHIRT-LNN-001',
                 price: 1280,
                 stock: 15,
-                imageUrl: 'images/S__11395077_0.jpg"',
-                description: '採用高級亞麻製成，透氣舒適，是夏日衣櫥的必備單品。',
+                imageUrls: [
+                    'images/S__11395077_0.jpg',
+                    'images/S__11395078_0.jpg'
+                ],
+                description: '採用高級亞麻製成，透氣舒適，是夏日衣櫥的必備單品。經典剪裁，適合各種場合穿搭。',
                 is_featured: true,
             },
             {
@@ -128,8 +178,11 @@
                 sku: 'JEANS-STR-002',
                 price: 1880,
                 stock: 8,
-                imageUrl: 'images/S__11395078_0.jpg"',
-                description: '經典直筒剪裁，修飾腿型，打造復古時尚感。',
+                imageUrls: [
+                    'images/S__11395079_0.jpg',
+                    'images/S__11395080_0.jpg'
+                ],
+                description: '經典直筒剪裁，修飾腿型，打造復古時尚感。水洗工藝帶來自然色落，百搭耐穿。',
                 is_featured: true,
             },
             {
@@ -138,8 +191,13 @@
                 sku: 'COAT-TRCH-001',
                 price: 2980,
                 stock: 5,
-                imageUrl: 'images/S__11395079_0.jpg"',
-                description: '輕量化防潑水面料，適合多變的都市天氣，兼具機能與時尚。',
+                imageUrls: [
+                    'images/S__11264004_0.jpg',
+                    'images/S__11264005_0.jpg',
+                    'images/S__11264006_0.jpg',
+                    'images/S__11264007_0.jpg'
+                ],
+                description: '輕量化防潑水面料，適合多變的都市天氣，兼具機能與時尚。附可拆式腰帶，打造不同造型。',
                 is_featured: false,
             },
             {
@@ -148,8 +206,11 @@
                 sku: 'TEE-PRNT-005',
                 price: 790,
                 stock: 30,
-                imageUrl: 'images/S__11395080_0.jpg"',
-                description: '柔軟的100%純棉，搭配原創設計印花，展現個人特色。',
+                imageUrls: [
+                    'images/S__11403271_0.jpg',
+                    'images/S__11403272_0.jpg'
+                ],
+                description: '柔軟的100%純棉，搭配原創設計印花，展現個人特色。舒適親膚，日常穿搭首選。',
                 is_featured: true,
             },
             {
@@ -158,23 +219,19 @@
                 sku: 'SKIRT-CHF-003',
                 price: 1580,
                 stock: 0,
-                imageUrl: 'images/S__11264004_0.jpg"',
-                description: '飄逸的雪紡材質，優雅的A字剪裁，散發浪漫氣息。',
+                imageUrls: [
+                    'images/S__11403281_0.jpg',
+                    'images/S__11403282_0.jpg',
+                    'images/S__11403283_0.jpg',
+                    'images/S__11403284_0.jpg'
+                ],
+                description: '飄逸的雪紡材質，優雅的A字剪裁，散發浪漫氣息。內裡舒適，行走間搖曳生姿。',
                 is_featured: true,
             }
         ];
 
+        // 模擬從資料庫獲取資料
         function getProducts() {
-			/*
-            const productsFromStorage = localStorage.getItem('fashionProducts');
-            if (productsFromStorage) {
-                return JSON.parse(productsFromStorage);
-            } else {
-                // 如果 localStorage 沒有資料，則使用初始資料並存入
-                localStorage.setItem('fashionProducts', JSON.stringify(initialProducts));
-                return initialProducts;
-            }
-			*/
 			return initialProducts;
         }
         
@@ -186,6 +243,15 @@
         const noStockMessage = document.getElementById('no-stock-message');
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
+        
+        // Modal DOM 元素
+        const imageModal = document.getElementById('image-modal');
+        const modalCloseButton = document.getElementById('modal-close-button');
+        const modalMainImage = document.getElementById('modal-main-image');
+        const modalThumbnails = document.getElementById('modal-thumbnails');
+        const modalProductName = document.getElementById('modal-product-name');
+        const modalProductPrice = document.getElementById('modal-product-price');
+        const modalProductDescription = document.getElementById('modal-product-description');
 
 
         // --- 核心功能函式 ---
@@ -206,11 +272,12 @@
             const inStockTag = product.stock > 0 && !product.is_featured
                 ? `<div class="tag bg-green-500 text-white">現貨供應</div>` : '';
 
+            // 卡片現在帶有 data-product-id 以便識別，並有 cursor-pointer 提示可點擊
             return `
-                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 card-hover relative">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 card-hover relative cursor-pointer" data-product-id="${product.id}">
                     ${featuredTag}
                     ${inStockTag}
-                    <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-64 object-cover" onerror="this.src='https://placehold.co/400x400/cccccc/333333?text=Image+Not+Found'">
+                    <img src="${product.imageUrls[0]}" alt="${product.name}" class="w-full h-80 object-cover" onerror="this.src='https://placehold.co/400x400/cccccc/333333?text=Image+Not+Found'">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold mb-2 truncate">${product.name}</h3>
                         <div class="flex justify-between items-center">
@@ -226,17 +293,14 @@
          * 渲染所有區塊的商品
          */
         function renderAllProducts() {
-            products = getProducts(); // 每次渲染都重新從 localStorage 獲取最新資料
+            products = getProducts(); 
 
-            // 清空現有內容
             hotItemsGrid.innerHTML = '';
             inStockGrid.innerHTML = '';
 
-            // 篩選商品
             const featuredProducts = products.filter(p => p.is_featured);
             const inStockProducts = products.filter(p => p.stock > 0);
 
-            // 渲染熱門商品
             if(featuredProducts.length > 0) {
                  featuredProducts.forEach(product => {
                     hotItemsGrid.innerHTML += createProductCard(product);
@@ -245,7 +309,6 @@
                  hotItemsGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">目前沒有熱門商品。</p>`;
             }
            
-            // 渲染現貨商品
             if (inStockProducts.length > 0) {
                 inStockGrid.classList.remove('hidden');
                 noStockMessage.classList.add('hidden');
@@ -257,8 +320,66 @@
                 noStockMessage.classList.remove('hidden');
             }
         }
+        
+        // --- Modal 相關函式 ---
+
+        /**
+         * 開啟並填入 Modal 資料
+         * @param {number} productId - 商品 ID
+         */
+        function openImageModal(productId) {
+            const product = products.find(p => p.id == productId);
+            if (!product) return;
+
+            // 填入商品資訊
+            modalProductName.textContent = product.name;
+            modalProductPrice.textContent = `NT$ ${product.price.toLocaleString()}`;
+            modalProductDescription.textContent = product.description;
+            
+            // 設定主圖為第一張圖
+            modalMainImage.src = product.imageUrls[0];
+            modalMainImage.alt = product.name;
+
+            // 產生縮圖
+            modalThumbnails.innerHTML = '';
+            product.imageUrls.forEach((url, index) => {
+                const thumb = document.createElement('img');
+                thumb.src = url;
+                thumb.alt = `${product.name} - view ${index + 1}`;
+                thumb.className = 'w-16 h-20 object-cover rounded-md cursor-pointer border-2 border-transparent hover:border-indigo-400 transition-all';
+                // 將 URL 存在 data-attribute 中
+                thumb.dataset.fullUrl = url;
+                // 給第一張縮圖加上 active 樣式
+                if (index === 0) {
+                    thumb.classList.add('thumbnail-active');
+                }
+                modalThumbnails.appendChild(thumb);
+            });
+            
+            // 顯示 modal
+            imageModal.classList.remove('hidden');
+            // 觸發動畫
+            setTimeout(() => {
+                imageModal.classList.add('opacity-100');
+                imageModal.querySelector('.transform').classList.remove('scale-95');
+            }, 10);
+        }
+
+        /**
+         * 關閉 Modal
+         */
+        function closeImageModal() {
+            imageModal.classList.remove('opacity-100');
+            imageModal.querySelector('.transform').classList.add('scale-95');
+            setTimeout(() => {
+                 imageModal.classList.add('hidden');
+            }, 300); // 等待動畫結束
+        }
+
 
         // --- 事件監聽器 ---
+        
+        // 頁面載入時渲染商品
         document.addEventListener('DOMContentLoaded', renderAllProducts);
 
         // 手機版漢堡選單
@@ -273,12 +394,37 @@
             });
         });
 
-        // 監聽 storage 事件，當後台更新資料時，前台可以即時刷新
-        window.addEventListener('storage', (event) => {
-          if (event.key === 'fashionProducts') {
-            console.log('偵測到商品資料變更，正在重新整理前台...');
-            renderAllProducts();
-          }
+        // 利用事件委派來監聽商品卡片的點擊
+        document.querySelector('main').addEventListener('click', (event) => {
+            const card = event.target.closest('[data-product-id]');
+            if (card) {
+                const productId = card.dataset.productId;
+                openImageModal(productId);
+            }
+        });
+        
+        // 監聽 Modal 關閉按鈕
+        modalCloseButton.addEventListener('click', closeImageModal);
+        
+        // 點擊 Modal 背景也可以關閉
+        imageModal.addEventListener('click', (event) => {
+            if (event.target === imageModal) {
+                closeImageModal();
+            }
+        });
+
+        // 監聽縮圖點擊事件
+        modalThumbnails.addEventListener('click', (event) => {
+            if (event.target.tagName === 'IMG') {
+                const newSrc = event.target.dataset.fullUrl;
+                modalMainImage.src = newSrc;
+                
+                // 更新 active 樣式
+                // 移除所有縮圖的 active class
+                modalThumbnails.querySelectorAll('img').forEach(img => img.classList.remove('thumbnail-active'));
+                // 為被點擊的縮圖加上 active class
+                event.target.classList.add('thumbnail-active');
+            }
         });
 
     </script>
