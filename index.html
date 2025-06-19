@@ -165,6 +165,7 @@
         ];
 
         function getProducts() {
+			/*
             const productsFromStorage = localStorage.getItem('fashionProducts');
             if (productsFromStorage) {
                 return JSON.parse(productsFromStorage);
@@ -173,6 +174,8 @@
                 localStorage.setItem('fashionProducts', JSON.stringify(initialProducts));
                 return initialProducts;
             }
+			*/
+			return initialProducts;
         }
         
         let products = getProducts();
