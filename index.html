@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StyleHub - 服裝設計</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .tag {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-gray-800">
+                <a href="#">Style<span class="text-indigo-600">Hub</span></a>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#hot-items" class="text-gray-600 hover:text-indigo-600">熱門服裝</a>
+                <a href="#in-stock" class="text-gray-600 hover:text-indigo-600">現貨服裝</a>
+                <a href="admin.html" target="_blank" class="text-blue-600 hover:text-blue-800 font-semibold">
+                    <i class="fas fa-user-shield mr-1"></i>後台管理
+                </a>
+                <a href="#" class="text-gray-600 hover:text-indigo-600">關於我們</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#hot-items" class="block py-2 text-gray-600 hover:text-indigo-600">熱門服裝</a>
+            <a href="#in-stock" class="block py-2 text-gray-600 hover:text-indigo-600">現貨服裝</a>
+            <a href="admin.html" target="_blank" class="block py-2 text-blue-600 font-semibold">
+                 <i class="fas fa-user-shield mr-1"></i>後台管理
+            </a>
+            <a href="#" class="block py-2 text-gray-600 hover:text-indigo-600">關於我們</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-indigo-100">
+        <div class="container mx-auto px-6 py-16 md:py-24 flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 text-center md:text-left mb-10 md:mb-0">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">2025 夏季系列</h1>
+                <p class="text-lg text-gray-600 mb-8">探索最新潮流，定義屬於你的夏日風格。</p>
+                <a href="#in-stock" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full hover:bg-indigo-700 transition duration-300">立即選購</a>
+            </div>
+            <div class="md:w-1/2">
+                <img src="https://placehold.co/600x400/e9d5ff/4338ca?text=Summer+Vibes" alt="夏季系列主視覺" class="rounded-lg shadow-xl w-full">
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-12">
+
+        <!-- 熱門服裝 Section -->
+        <section id="hot-items" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-2">熱門服裝</h2>
+            <p class="text-center text-gray-500 mb-8">設計師精選，本季不容錯過的時尚單品。</p>
+            <div id="hot-items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Hot items will be dynamically inserted here -->
+            </div>
+        </section>
+
+        <!-- 現貨服裝 Section -->
+        <section id="in-stock" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-2">現貨服裝</h2>
+            <p class="text-center text-gray-500 mb-8">無需等待，下單後立即為您出貨。</p>
+            <div id="instock-items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- In-stock items will be dynamically inserted here -->
+            </div>
+             <div id="no-stock-message" class="text-center py-12 text-gray-500 hidden">
+                <i class="fas fa-box-open text-4xl mb-4"></i>
+                <p>目前所有現貨商品皆已售罄，敬請期待補貨！</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-6 py-8">
+            <div class="text-center">
+                <p>StyleHub &copy; 2025. All Rights Reserved.</p>
+                <p class="text-sm text-gray-400">這是一個模擬網站，用於功能展示。</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // --- 資料管理 ---
+        // 為了模擬前後台分離但共用資料庫，我們使用瀏覽器的 localStorage
+        
+        const initialProducts = [
+             {
+                id: 1,
+                name: '法式亞麻寬鬆襯衫',
+                sku: 'SHIRT-LNN-001',
+                price: 1280,
+                stock: 15,
+                imageUrl: 'https://placehold.co/400x400/d1d5db/374151?text=Linen+Shirt',
+                description: '採用高級亞麻製成，透氣舒適，是夏日衣櫥的必備單品。',
+                is_featured: true,
+            },
+            {
+                id: 2,
+                name: '高腰直筒牛仔褲',
+                sku: 'JEANS-STR-002',
+                price: 1880,
+                stock: 8,
+                imageUrl: 'https://placehold.co/400x400/93c5fd/1e3a8a?text=Straight+Jeans',
+                description: '經典直筒剪裁，修飾腿型，打造復古時尚感。',
+                is_featured: true,
+            },
+            {
+                id: 3,
+                name: '都會防潑水風衣',
+                sku: 'COAT-TRCH-001',
+                price: 2980,
+                stock: 5,
+                imageUrl: 'https://placehold.co/400x400/fde68a/b45309?text=Trench+Coat',
+                description: '輕量化防潑水面料，適合多變的都市天氣，兼具機能與時尚。',
+                is_featured: false,
+            },
+            {
+                id: 4,
+                name: '純棉印花 T-Shirt',
+                sku: 'TEE-PRNT-005',
+                price: 790,
+                stock: 30,
+                imageUrl: 'https://placehold.co/400x400/a7f3d0/065f46?text=Graphic+Tee',
+                description: '柔軟的100%純棉，搭配原創設計印花，展現個人特色。',
+                is_featured: true,
+            },
+            {
+                id: 5,
+                name: 'A字雪紡長裙',
+                sku: 'SKIRT-CHF-003',
+                price: 1580,
+                stock: 0,
+                imageUrl: 'https://placehold.co/400x400/f9a8d4/831843?text=Chiffon+Skirt',
+                description: '飄逸的雪紡材質，優雅的A字剪裁，散發浪漫氣息。',
+                is_featured: true,
+            }
+        ];
+
+        function getProducts() {
+            const productsFromStorage = localStorage.getItem('fashionProducts');
+            if (productsFromStorage) {
+                return JSON.parse(productsFromStorage);
+            } else {
+                // 如果 localStorage 沒有資料，則使用初始資料並存入
+                localStorage.setItem('fashionProducts', JSON.stringify(initialProducts));
+                return initialProducts;
+            }
+        }
+        
+        let products = getProducts();
+
+        // --- DOM 元素 ---
+        const hotItemsGrid = document.getElementById('hot-items-grid');
+        const inStockGrid = document.getElementById('instock-items-grid');
+        const noStockMessage = document.getElementById('no-stock-message');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+
+        // --- 核心功能函式 ---
+
+        /**
+         * 產生單一商品卡片的 HTML
+         * @param {object} product - 商品物件
+         * @returns {string} - HTML 字串
+         */
+        function createProductCard(product) {
+            const stockInfo = product.stock > 0
+                ? `<p class="text-sm text-gray-500">庫存: ${product.stock}</p>`
+                : `<p class="text-sm text-red-500 font-semibold">已售完</p>`;
+            
+            const featuredTag = product.is_featured 
+                ? `<div class="tag bg-indigo-500 text-white">熱門商品</div>` : '';
+            
+            const inStockTag = product.stock > 0 && !product.is_featured
+                ? `<div class="tag bg-green-500 text-white">現貨供應</div>` : '';
+
+            return `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 card-hover relative">
+                    ${featuredTag}
+                    ${inStockTag}
+                    <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-64 object-cover" onerror="this.src='https://placehold.co/400x400/cccccc/333333?text=Image+Not+Found'">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold mb-2 truncate">${product.name}</h3>
+                        <div class="flex justify-between items-center">
+                            <p class="text-xl font-bold text-indigo-600">NT$ ${product.price.toLocaleString()}</p>
+                            ${stockInfo}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * 渲染所有區塊的商品
+         */
+        function renderAllProducts() {
+            products = getProducts(); // 每次渲染都重新從 localStorage 獲取最新資料
+
+            // 清空現有內容
+            hotItemsGrid.innerHTML = '';
+            inStockGrid.innerHTML = '';
+
+            // 篩選商品
+            const featuredProducts = products.filter(p => p.is_featured);
+            const inStockProducts = products.filter(p => p.stock > 0);
+
+            // 渲染熱門商品
+            if(featuredProducts.length > 0) {
+                 featuredProducts.forEach(product => {
+                    hotItemsGrid.innerHTML += createProductCard(product);
+                });
+            } else {
+                 hotItemsGrid.innerHTML = `<p class="col-span-full text-center text-gray-500">目前沒有熱門商品。</p>`;
+            }
+           
+            // 渲染現貨商品
+            if (inStockProducts.length > 0) {
+                inStockGrid.classList.remove('hidden');
+                noStockMessage.classList.add('hidden');
+                inStockProducts.forEach(product => {
+                    inStockGrid.innerHTML += createProductCard(product);
+                });
+            } else {
+                inStockGrid.classList.add('hidden');
+                noStockMessage.classList.remove('hidden');
+            }
+        }
+
+        // --- 事件監聽器 ---
+        document.addEventListener('DOMContentLoaded', renderAllProducts);
+
+        // 手機版漢堡選單
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (!link.hasAttribute('target')) {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        // 監聽 storage 事件，當後台更新資料時，前台可以即時刷新
+        window.addEventListener('storage', (event) => {
+          if (event.key === 'fashionProducts') {
+            console.log('偵測到商品資料變更，正在重新整理前台...');
+            renderAllProducts();
+          }
+        });
+
+    </script>
+</body>
+</html>
