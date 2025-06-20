@@ -166,7 +166,7 @@
                                 <th class="p-4">庫存</th>
                                 <th class="p-4">尺寸</th>
                                 <th class="p-4">狀態</th>
-                                <th class="p-4">新品</th>
+                                <th class="p-4">熱門</th> <th class="p-4">新品</th>
                                 <th class="p-4">停售</th>
                                 <th class="p-4 text-center">操作</th>
                             </tr>
@@ -342,7 +342,9 @@
 			  currentProductsData = products; // 更新全域變數中的商品資料
 
 			  if (products.length === 0) {
-				  productListContainer.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>'; // Adjusted colspan for new column
+				  // 注意：這裡的 colspan 應該根據您最終表格的列數來調整
+				  // 原始是 8 (有新品欄位), 移除停售顯示後，如果其他列數不變，應該是 8
+				  productListContainer.innerHTML = '<tr><td colspan="10" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>';
 				  return;
 			  }
 
@@ -364,16 +366,15 @@
 					  <td class="p-4 text-gray-600">${product.stock !== undefined ? product.stock : 'N/A'}</td>
                       <td class="p-4">${sizesHtml}</td>
                       <td class="p-4">
-						  ${product.is_featured ? '<span class="bg-indigo-100 text-indigo-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">熱門</span>' : ''}
-						  ${product.stock > 0 ? '<span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">現貨</span>' : '<span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">售完</span>'}
+                          ${product.stock > 0 ? '<span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">現貨</span>' : '<span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">售完</span>'}
 					  </td>
-                      <td class="p-4">
-                          ${product.is_new ? '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">新品</span>' : ''}
+                      <td class="p-4"> ${product.is_featured ? '<span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">熱門</span>' : '<span class="bg-gray-100 text-gray-500 text-xs font-semibold px-2.5 py-0.5 rounded-full">一般</span>'}
                       </td>
-                      <td class="p-4">
-                          ${product.is_discontinued ? '<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">停售</span>' : ''}
+                      <td class="p-4"> ${product.is_new ? '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">新品</span>' : '<span class="bg-gray-100 text-gray-500 text-xs font-semibold px-2.5 py-0.5 rounded-full">舊品</span>'}
                       </td>
-					  <td class="p-4 text-center">
+                      <td class="p-4"> ${product.is_discontinued ? '<span class="bg-gray-200 text-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full">已停售</span>' : '<span class="bg-gray-100 text-gray-500 text-xs font-semibold px-2.5 py-0.5 rounded-full">販售中</span>'}
+                      </td>
+                      <td class="p-4 text-center">
 						  <button class="text-blue-600 hover:text-blue-800 p-2 view-images-btn" data-id="${product.id}" title="檢視圖片"><i class="fas fa-eye"></i></button>
 						  <button class="text-indigo-600 hover:text-indigo-800 p-2 edit-btn" data-id="${product.id}" title="編輯"><i class="fas fa-edit"></i></button>
 						  <button class="text-red-600 hover:text-red-800 p-2 delete-btn" data-id="${product.id}" title="刪除"><i class="fas fa-trash"></i></button>
@@ -510,7 +511,7 @@
 				  description: document.getElementById('product-description').value,
 				  is_featured: document.getElementById('product-is-featured').checked,
                   is_new: document.getElementById('product-is-new').checked,
-                  is_discontinued: document.getElementById('product-is-discontinued').checked, // NEW: Include is_discontinued
+                  is_discontinued: document.getElementById('product-is-discontinued').checked,
 				  createdAt: firebase.firestore.FieldValue.serverTimestamp()
 			  };
 
@@ -560,7 +561,7 @@
 					  document.getElementById('edit-product-description').value = productToEdit.description || '';
 					  document.getElementById('edit-product-is-featured').checked = productToEdit.is_featured || false;
                       document.getElementById('edit-product-is-new').checked = productToEdit.is_new || false;
-                      document.getElementById('edit-product-is-discontinued').checked = productToEdit.is_discontinued || false; // NEW: Populate is_discontinued
+                      document.getElementById('edit-product-is-discontinued').checked = productToEdit.is_discontinued || false;
 
 					  editModal.classList.add('is-open'); // <-- 使用在 DOMContentLoaded 內部取得的 editModal
 					   console.log("Edit modal opened.");
@@ -625,7 +626,7 @@
 				  description: document.getElementById('edit-product-description').value,
 				  is_featured: document.getElementById('edit-product-is-featured').checked,
                   is_new: document.getElementById('edit-product-is-new').checked,
-                  is_discontinued: document.getElementById('edit-product-is-discontinued').checked, // NEW: Include is_discontinued
+                  is_discontinued: document.getElementById('edit-product-is-discontinued').checked,
 				  updatedAt: firebase.firestore.FieldValue.serverTimestamp() // 新增更新時間戳
 			  };
 
@@ -864,11 +865,10 @@
 				const searchTerm = event.target.value.toLowerCase();
 
 				// 根據搜尋詞過濾 productsArray (始終從完整的原始列表過濾)
+				// 注意：在後台，我們希望顯示所有商品，所以這裡不再過濾 is_discontinued。
+				// is_discontinued 的顯示會直接在 renderProductList 中處理。
 				const filteredProducts = productsArray.filter(product => {
-					if (product && product.name) {
-						 return product.name.toLowerCase().includes(searchTerm);
-					}
-					return false;
+					return product && product.name && product.name.toLowerCase().includes(searchTerm);
 				});
 
 				// === 關鍵步驟：更新 currentFilteredProducts ===
@@ -976,10 +976,13 @@
 					 ...doc.data()
 				 }));
 				 // 儲存從 Firestore 載入的所有商品資料 (原始完整列表)
+				 // 後台顯示所有商品，所以這裡不執行 is_discontinued 過濾
 				 productsArray = products;
+                 console.log("載入所有商品，包含停售商品，數量:", productsArray.length);
 
 				// 3. 初始化 currentFilteredProducts 為完整的列表
 				currentFilteredProducts = [...productsArray];
+
 
 				// 4. 初始化 currentPage 和 itemsPerPage (itemsPerPage 已經在全域宣告時初始化)
 				currentPage = 1;
