@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StyleHub 後台管理</title>
+    <title>Iris 後台管理</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,12 +68,31 @@
 			color: #999; /* 設定 placeholder 文字顏色 */
 			font-style: italic; /* 可以選擇讓 placeholder 文字斜體 */
 		}
+        .pagination-controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination-controls button {
+            margin: 0 5px;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .pagination-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination-controls button.active {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            border-color: #4f46e5;
+        }
 
     </style>
 </head>
 <body class="text-gray-800">
 
-    <!-- Header -->
     <header class="bg-white shadow-md sticky top-0 z-40">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="text-2xl font-bold text-gray-800">
@@ -85,14 +104,11 @@
         </nav>
     </header>
 
-    <!-- Main Content -->
     <main class="container mx-auto px-6 py-12">
 
-        <!-- 後台管理 Section -->
         <section id="admin-panel" class="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
             <h2 class="text-3xl font-bold mb-6 border-b pb-4">商品管理系統</h2>
 
-            <!-- 新增商品表單 -->
             <div class="mb-8">
                 <h3 class="text-xl font-semibold mb-4">新增商品</h3>
                 <form id="add-product-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -100,6 +116,7 @@
                     <input type="text" id="product-sku" placeholder="商品編號 (SKU)" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                     <input type="number" id="product-price" placeholder="價格" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                     <input type="number" id="product-stock" placeholder="庫存數量" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
+                    <input type="text" id="product-sizes" placeholder="尺寸 (例如: S, M, L, XL)" class="p-3 border rounded-lg col-span-1 md:col-span-2 focus:ring-2 focus:ring-indigo-500">
                     <textarea id="product-image-urls" placeholder="圖片網址 (一行一個)" class="p-3 border rounded-lg col-span-1 md:col-span-2 h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                     <textarea id="product-description" placeholder="商品描述" class="p-3 border rounded-lg col-span-1 md:col-span-2 h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                     <div class="col-span-1 md:col-span-2 flex items-center space-x-4">
@@ -115,24 +132,20 @@
                     </div>
                 </form>
             </div>
-			<!-- 在您的 <table class="product-table"> ... 的前面或上面 -->
 			<div class="search-bar">
 				<label for="searchProductName">搜尋商品名稱:</label>
 				<input type="text" id="searchProductName" placeholder="輸入商品名稱關鍵字">
 			</div>
 			
 
-			<!-- 新增這個區塊來選擇每頁顯示數量 -->
 			<div class="items-per-page-selector">
 				<label for="itemsPerPageSelect">每頁顯示:</label>
 				<select id="itemsPerPageSelect">
 					<option value="5">5</option>
-					<option value="10" selected>10</option> <!-- 預設為 10 -->
-					<option value="20">20</option>
+					<option value="10" selected>10</option> <option value="20">20</option>
 					<option value="50">50</option>
 				</select>
 			</div>
-            <!-- 商品管理列表 -->
             <div>
                 <h3 class="text-xl font-semibold mb-4">管理現有商品</h3>
                 <div class="overflow-x-auto">
@@ -143,26 +156,23 @@
                                 <th class="p-4">SKU</th>
                                 <th class="p-4">價格</th>
                                 <th class="p-4">庫存</th>
-                                <th class="p-4">狀態</th>
+                                <th class="p-4">尺寸</th> <th class="p-4">狀態</th>
                                 <th class="p-4 text-center">操作</th>
                             </tr>
                         </thead>
                         <tbody id="product-list">
-                            <!-- Admin product list will be dynamically inserted here -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
 			
 			<div id="paginationControls" class="pagination-controls">
-				<!-- 分頁控制項將在這裡渲染 -->
-			</div>
+				</div>
 
         </section>
 
     </main>
 
-    <!-- 修改商品 Modal -->
     <div id="edit-modal" class="modal fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
         <div class="bg-white p-8 rounded-lg shadow-xl w-11/12 md:w-1/2 lg:w-1/3 max-h-[90vh] overflow-y-auto">
             <h3 class="text-2xl font-bold mb-6">修改商品資訊</h3>
@@ -173,6 +183,7 @@
                      <input type="text" id="edit-product-sku" placeholder="商品編號 (SKU)" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                      <input type="number" id="edit-product-price" placeholder="價格" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                      <input type="number" id="edit-product-stock" placeholder="庫存數量" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
+                     <input type="text" id="edit-product-sizes" placeholder="尺寸 (例如: S, M, L, XL)" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500">
                      <textarea id="edit-product-image-urls" placeholder="圖片網址 (一行一個)" class="w-full p-3 border rounded-lg h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                      <textarea id="edit-product-description" placeholder="商品描述" class="w-full p-3 border rounded-lg h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                      <label class="flex items-center">
@@ -188,7 +199,6 @@
         </div>
     </div>
 
-    <!-- 商品圖片預覽 Modal -->
     <div id="image-preview-modal" class="modal fixed inset-0 bg-black bg-opacity-70 justify-center items-center z-50">
         <div class="bg-white rounded-lg shadow-xl m-4 max-w-2xl w-full relative">
             <button id="preview-modal-close-button" class="absolute -top-3 -right-3 bg-white text-gray-700 w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-200 focus:outline-none z-10">
@@ -198,17 +208,15 @@
                 <h3 id="preview-modal-product-name" class="text-xl font-bold text-gray-800 mb-4"></h3>
                 <img id="preview-modal-main-image" src="" alt="Product Detail" class="w-full h-auto max-h-[60vh] object-contain rounded-md bg-gray-100 mb-4" onerror="this.src='https://placehold.co/600x400/cccccc/333333?text=Image+Not+Available'">
                 <div id="preview-modal-thumbnails" class="flex gap-2 pb-2 overflow-x-auto">
-                    <!-- Thumbnails -->
-                </div>
+                    </div>
             </div>
         </div>
     </div>
 
-    <!-- 刪除確認 Modal -->
     <div id="delete-confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
         <div class="bg-white p-8 rounded-lg shadow-xl w-11/12 md:w-1/3 text-center">
             <h3 class="text-xl font-bold mb-4">確定刪除？</h3>
-            <p id="delete-confirm-text" class="text-gray-600 mb-6">您確定要刪除這個商品嗎？此操作無法復原。</p>
+            <p id="delete-confirm-text" class="text-gray-600 mb-6">您確定要刪除 <span id="delete-product-name" class="font-semibold text-red-700"></span> 這個商品嗎？此操作無法復原。</p>
             <div class="flex justify-center space-x-4">
                 <button id="cancel-delete-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">取消</button>
                 <button id="confirm-delete-btn" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">確認刪除</button>
@@ -217,12 +225,8 @@
     </div>
 
 
-    <!-- 步驟 1: 透過 CDN 引入 Firebase SDK (使用 -compat 版本) -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    <!-- 如果需要其他服務，請在此引入對應的 -compat 模組 -->
-
-     <!-- 步驟 2: 放置你的 Firebase 配置和初始化程式碼 -->
     <script>
         // 你的 Firebase 配置物件 (從 Firebase 控制台取得並貼到這裡)
         const firebaseConfig = {
@@ -321,11 +325,16 @@
 			  currentProductsData = products; // 更新全域變數中的商品資料
 
 			  if (products.length === 0) {
-				  productListContainer.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>';
+				  productListContainer.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>'; // 增加 colspan for new size column
 				  return;
 			  }
 
 			  products.forEach(product => {
+                  // 處理尺寸顯示
+                  const sizesHtml = (product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0)
+                      ? product.sizes.map(size => `<span class="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded mr-1">${size}</span>`).join('')
+                      : '<span class="text-gray-400 text-xs">無</span>';
+
 				  const row = document.createElement('tr');
 				  row.classList.add('border-b', 'hover:bg-gray-50');
 				  row.innerHTML = `
@@ -336,7 +345,7 @@
 					  <td class="p-4 text-gray-600">${product.sku || '無 SKU'}</td>
 					  <td class="p-4 text-gray-600">NT$ ${product.price !== undefined ? product.price.toLocaleString() : 'N/A'}</td>
 					  <td class="p-4 text-gray-600">${product.stock !== undefined ? product.stock : 'N/A'}</td>
-					  <td class="p-4">
+                      <td class="p-4">${sizesHtml}</td> <td class="p-4">
 						  ${product.is_featured ? '<span class="bg-indigo-100 text-indigo-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">熱門</span>' : ''}
 						  ${product.stock > 0 ? '<span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">現貨</span>' : '<span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">售完</span>'}
 					  </td>
@@ -461,12 +470,19 @@
 			  const imageUrls = imageUrlsText.split(/\r?\n/).map(url => url.trim()).filter(url => url);
 			  console.log("Parsed Image URLs:", imageUrls);
 
+              // 處理尺寸輸入
+              const sizesText = document.getElementById('product-sizes').value;
+              const sizes = sizesText.split(',').map(size => size.trim()).filter(size => size); // 將尺寸字串轉為陣列
+              console.log("Parsed Sizes:", sizes);
+
+
 			  const newProductData = {
 				  name: document.getElementById('product-name').value,
 				  sku: document.getElementById('product-sku').value,
 				  price: parseFloat(document.getElementById('product-price').value),
 				  stock: parseInt(document.getElementById('product-stock').value),
 				  imageUrls: imageUrls,
+                  sizes: sizes, // 新增尺寸到資料
 				  description: document.getElementById('product-description').value,
 				  is_featured: document.getElementById('product-is-featured').checked,
 				  createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -512,6 +528,8 @@
 					  document.getElementById('edit-product-sku').value = productToEdit.sku || '';
 					  document.getElementById('edit-product-price').value = productToEdit.price !== undefined ? productToEdit.price : '';
 					  document.getElementById('edit-product-stock').value = productToEdit.stock !== undefined ? productToEdit.stock : '';
+                      // 填充尺寸欄位
+                      document.getElementById('edit-product-sizes').value = (productToEdit.sizes && Array.isArray(productToEdit.sizes)) ? productToEdit.sizes.join(', ') : '';
 					  document.getElementById('edit-product-image-urls').value = productToEdit.imageUrls && Array.isArray(productToEdit.imageUrls) ? productToEdit.imageUrls.join('\n') : '';
 					  document.getElementById('edit-product-description').value = productToEdit.description || '';
 					  document.getElementById('edit-product-is-featured').checked = productToEdit.is_featured || false;
@@ -564,12 +582,18 @@
 			  const imageUrls = imageUrlsText.split(/\r?\n/).map(url => url.trim()).filter(url => url);
 			  console.log("Parsed Image URLs for edit:", imageUrls);
 
+              // 處理尺寸更新
+              const sizesText = document.getElementById('edit-product-sizes').value;
+              const sizes = sizesText.split(',').map(size => size.trim()).filter(size => size);
+              console.log("Parsed Sizes for edit:", sizes);
+
 			  const updatedProductData = {
 				  name: document.getElementById('edit-product-name').value,
 				  sku: document.getElementById('edit-product-sku').value,
 				  price: parseFloat(document.getElementById('edit-product-price').value),
 				  stock: parseInt(document.getElementById('edit-product-stock').value),
 				  imageUrls: imageUrls,
+                  sizes: sizes, // 更新尺寸到資料
 				  description: document.getElementById('edit-product-description').value,
 				  is_featured: document.getElementById('edit-product-is-featured').checked,
 				  updatedAt: firebase.firestore.FieldValue.serverTimestamp() // 新增更新時間戳
@@ -866,7 +890,7 @@
 			console.log("每頁顯示數量選擇功能已啟用。");
 		}
 
-		  // --- 綁定主要的事件監聽器 (在 DOMContentLoaded 內綁定) ---
+		  // --- 綁定主要的事件監聽器 (在 DOMContentLoaded 內部綁定) ---
 
 		  // 新增商品表單提交事件
 		  if (addForm) {
