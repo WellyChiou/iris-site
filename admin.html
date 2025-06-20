@@ -487,7 +487,7 @@
                   }
 
                   const imageUrlsText = document.getElementById('edit-product-image-urls').value;
-                  const imageUrls = imageUrlsText.split(/\\r?\\n/).map(url => url.trim()).filter(url => url);
+                  const imageUrls = imageUrlsText.split(/\r?\n/).map(url => url.trim()).filter(url => url);
                   console.log("Parsed Image URLs for edit:", imageUrls);
 
                   const updatedProductData = {
