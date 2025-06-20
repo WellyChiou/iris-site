@@ -21,12 +21,17 @@
         .modal.is-open {
             display: flex;
         }
+        /* 圖片預覽 Modal 的樣式 */
+        .thumbnail-active {
+            border-color: #4f46e5; /* indigo-600 */
+            outline: 2px solid #4f46e5;
+        }
     </style>
 </head>
 <body class="text-gray-800">
 
     <!-- Header -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
+    <header class="bg-white shadow-md sticky top-0 z-40">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="text-2xl font-bold text-gray-800">
                 <a href="#">Style<span class="text-indigo-600">Hub</span> 後台</a>
@@ -43,7 +48,7 @@
         <!-- 後台管理 Section -->
         <section id="admin-panel" class="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
             <h2 class="text-3xl font-bold mb-6 border-b pb-4">商品管理系統</h2>
-            
+
             <!-- 新增商品表單 -->
             <div class="mb-8">
                 <h3 class="text-xl font-semibold mb-4">新增商品</h3>
@@ -52,7 +57,7 @@
                     <input type="text" id="product-sku" placeholder="商品編號 (SKU)" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                     <input type="number" id="product-price" placeholder="價格" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                     <input type="number" id="product-stock" placeholder="庫存數量" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
-                    <input type="text" id="product-image" placeholder="圖片網址 (可使用 placehold.co)" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 col-span-1 md:col-span-2">
+                    <textarea id="product-image-urls" placeholder="圖片網址 (一行一個)" class="p-3 border rounded-lg col-span-1 md:col-span-2 h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                     <textarea id="product-description" placeholder="商品描述" class="p-3 border rounded-lg col-span-1 md:col-span-2 h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                     <div class="col-span-1 md:col-span-2 flex items-center space-x-4">
                         <label class="flex items-center">
@@ -92,9 +97,9 @@
         </section>
 
     </main>
-    
+
     <!-- 修改商品 Modal -->
-    <div id="edit-modal" class="modal fixed inset-0 bg-black bg-opacity-50 justify-center items-center">
+    <div id="edit-modal" class="modal fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
         <div class="bg-white p-8 rounded-lg shadow-xl w-11/12 md:w-1/2 lg:w-1/3 max-h-[90vh] overflow-y-auto">
             <h3 class="text-2xl font-bold mb-6">修改商品資訊</h3>
             <form id="edit-product-form">
@@ -104,7 +109,7 @@
                      <input type="text" id="edit-product-sku" placeholder="商品編號 (SKU)" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                      <input type="number" id="edit-product-price" placeholder="價格" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                      <input type="number" id="edit-product-stock" placeholder="庫存數量" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
-                     <input type="text" id="edit-product-image" placeholder="圖片網址" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+                     <textarea id="edit-product-image-urls" placeholder="圖片網址 (一行一個)" class="w-full p-3 border rounded-lg h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                      <textarea id="edit-product-description" placeholder="商品描述" class="w-full p-3 border rounded-lg h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                      <label class="flex items-center">
                          <input type="checkbox" id="edit-product-is-featured" class="h-5 w-5 text-indigo-600 rounded">
@@ -119,187 +124,270 @@
         </div>
     </div>
 
+    <!-- 商品圖片預覽 Modal -->
+    <div id="image-preview-modal" class="modal fixed inset-0 bg-black bg-opacity-70 justify-center items-center z-50">
+        <div class="bg-white rounded-lg shadow-xl m-4 max-w-2xl w-full relative">
+            <button id="preview-modal-close-button" class="absolute -top-3 -right-3 bg-white text-gray-700 w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-200 focus:outline-none z-10">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="p-6">
+                <h3 id="preview-modal-product-name" class="text-xl font-bold text-gray-800 mb-4"></h3>
+                <img id="preview-modal-main-image" src="" alt="Product Detail" class="w-full h-auto max-h-[60vh] object-contain rounded-md bg-gray-100 mb-4" onerror="this.src='https://placehold.co/600x400/cccccc/333333?text=Image+Not+Available'">
+                <div id="preview-modal-thumbnails" class="flex gap-2 pb-2 overflow-x-auto">
+                    <!-- Thumbnails -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 刪除確認 Modal -->
+    <div id="delete-confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-11/12 md:w-1/3 text-center">
+            <h3 class="text-xl font-bold mb-4">確定刪除？</h3>
+            <p id="delete-confirm-text" class="text-gray-600 mb-6">您確定要刪除這個商品嗎？此操作無法復原。</p>
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-delete-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">取消</button>
+                <button id="confirm-delete-btn" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">確認刪除</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 步驟 1: 透過 CDN 引入 Firebase SDK (使用 -compat 版本) -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <!-- 如果需要其他服務，請在此引入對應的 -compat 模組 -->
+
+     <!-- 步驟 2: 放置你的 Firebase 配置和初始化程式碼 -->
     <script>
-        // --- 資料管理 ---
-        const initialProducts = [
-            { id: 1, name: '法式亞麻寬鬆襯衫', sku: 'SHIRT-LNN-001', price: 1280, stock: 15, imageUrl: 'https://placehold.co/400x400/d1d5db/374151?text=Linen+Shirt', description: '採用高級亞麻製成，透氣舒適，是夏日衣櫥的必備單品。', is_featured: true },
-            { id: 2, name: '高腰直筒牛仔褲', sku: 'JEANS-STR-002', price: 1880, stock: 8, imageUrl: 'https://placehold.co/400x400/93c5fd/1e3a8a?text=Straight+Jeans', description: '經典直筒剪裁，修飾腿型，打造復古時尚感。', is_featured: true },
-            { id: 3, name: '都會防潑水風衣', sku: 'COAT-TRCH-001', price: 2980, stock: 5, imageUrl: 'https://placehold.co/400x400/fde68a/b45309?text=Trench+Coat', description: '輕量化防潑水面料，適合多變的都市天氣，兼具機能與時尚。', is_featured: false },
-            { id: 4, name: '純棉印花 T-Shirt', sku: 'TEE-PRNT-005', price: 790, stock: 30, imageUrl: 'https://placehold.co/400x400/a7f3d0/065f46?text=Graphic+Tee', description: '柔軟的100%純棉，搭配原創設計印花，展現個人特色。', is_featured: true },
-            { id: 5, name: 'A字雪紡長裙', sku: 'SKIRT-CHF-003', price: 1580, stock: 0, imageUrl: 'https://placehold.co/400x400/f9a8d4/831843?text=Chiffon+Skirt', description: '飄逸的雪紡材質，優雅的A字剪裁，散發浪漫氣息。', is_featured: true }
-        ];
+        // 你的 Firebase 配置物件 (從 Firebase 控制台取得並貼到這裡)
+        const firebaseConfig = {
+          apiKey: "AIzaSyB7JlDaqB3dm9hpuXrLmxHNr9lBKDznkD0",
+          authDomain: "iris-wear.firebaseapp.com",
+          projectId: "iris-wear",
+          storageBucket: "iris-wear.firebasestorage.app",
+          messagingSenderId: "720824939218",
+          appId: "1:720824939218:web:13594d0ff6954ee726330b",
+          measurementId: "G-53QJG70PJT"
+        };
 
-        function getProducts() {
-            const productsFromStorage = localStorage.getItem('fashionProducts');
-            if (productsFromStorage) {
-                return JSON.parse(productsFromStorage);
-            } else {
-                localStorage.setItem('fashionProducts', JSON.stringify(initialProducts));
-                return initialProducts;
-            }
+        // 初始化 Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase 初始化成功！");
+        } catch (error) {
+            console.error("Firebase 初始化失敗：", error);
+            // 如果初始化失敗，阻止後續操作
+            document.body.innerHTML = '<div class="text-center p-12 text-red-600">Firebase 初始化失敗，請檢查控制台錯誤訊息和配置。</div>';
+            throw new Error("Firebase initialization failed"); // 拋出錯誤停止執行
         }
 
-        function saveProducts(products) {
-            localStorage.setItem('fashionProducts', JSON.stringify(products));
-        }
 
-        let products = getProducts();
+        // 取得 Firestore 實例
+        const db = firebase.firestore();
+        const productsCollection = db.collection('products'); // 指定商品存放的 collection 名稱
+        console.log("Firestore 實例已取得，collection 名稱為 'products'");
 
-        // --- DOM 元素 ---
+    </script>
+
+    <script>
+        // --- 資料管理 (改為與 Firestore 互動) ---
+        let productIdToDelete = null; // 用於儲存待刪除商品的 Firestore document ID
+        let currentProductsData = []; // 新增一個變數來儲存目前的商品資料 (用於編輯/刪除時查找名稱)
+
+
+        // --- DOM 元素 ---\
         const adminProductList = document.getElementById('admin-product-list');
         const addForm = document.getElementById('add-product-form');
+
         const editModal = document.getElementById('edit-modal');
         const editForm = document.getElementById('edit-product-form');
         const cancelEditBtn = document.getElementById('cancel-edit');
-        
+
+        const imagePreviewModal = document.getElementById('image-preview-modal');
+        const previewModalCloseButton = document.getElementById('preview-modal-close-button');
+
+        const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
         // --- 核心功能函式 ---
 
         /**
          * 渲染後台商品列表
+         * @param {Array<Object>} products - 從 Firestore 取得的商品資料陣列 (包含 Firestore document ID)
          */
-        function renderAdminList() {
-            // 清空現有內容
+        function renderAdminList(products) {
+            console.log("開始渲染商品列表，共", products.length, "項商品。");
             adminProductList.innerHTML = '';
+            if (products.length === 0) {
+                adminProductList.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>';
+                return;
+            }
 
-            // 渲染列表
             products.forEach(product => {
                 const row = document.createElement('tr');
-                row.classList.add('border-b');
+                row.classList.add('border-b', 'hover:bg-gray-50');
+                // 使用 product.id (Firestore document ID) 作為 data-id
                 row.innerHTML = `
                     <td class="p-4 flex items-center space-x-3">
-                        <img src="${product.imageUrl}" class="w-12 h-12 rounded-md object-cover" onerror="this.src='https://placehold.co/48x48/cccccc/333333?text=Img'">
-                        <span class="font-medium">${product.name}</span>
+                        <img src="${product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : 'https://placehold.co/48x48/cccccc/333333?text=N/A'}" class="w-12 h-12 rounded-md object-cover" onerror="this.src='https://placehold.co/48x48/cccccc/333333?text=Img'">
+                        <span class="font-medium">${product.name || '無名稱'}</span>
                     </td>
-                    <td class="p-4 text-gray-600">${product.sku}</td>
-                    <td class="p-4 text-gray-600">NT$ ${product.price.toLocaleString()}</td>
-                    <td class="p-4 text-gray-600">${product.stock}</td>
+                    <td class="p-4 text-gray-600">${product.sku || '無 SKU'}</td>
+                    <td class="p-4 text-gray-600">NT$ ${product.price !== undefined ? product.price.toLocaleString() : 'N/A'}</td>
+                    <td class="p-4 text-gray-600">${product.stock !== undefined ? product.stock : 'N/A'}</td>
                     <td class="p-4">
                         ${product.is_featured ? '<span class="bg-indigo-100 text-indigo-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">熱門</span>' : ''}
                         ${product.stock > 0 ? '<span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">現貨</span>' : '<span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">售完</span>'}
                     </td>
                     <td class="p-4 text-center">
-                        <button class="text-indigo-600 hover:text-indigo-800 p-2 edit-btn" data-id="${product.id}"><i class="fas fa-edit"></i></button>
-                        <button class="text-red-600 hover:text-red-800 p-2 delete-btn" data-id="${product.id}"><i class="fas fa-trash"></i></button>
+                        <button class="text-blue-600 hover:text-blue-800 p-2 view-images-btn" data-id="${product.id}" title="檢視圖片"><i class="fas fa-eye"></i></button>
+                        <button class="text-indigo-600 hover:text-indigo-800 p-2 edit-btn" data-id="${product.id}" title="編輯"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-800 p-2 delete-btn" data-id="${product.id}" title="刪除"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 adminProductList.appendChild(row);
             });
-            
-            // 重新綁定編輯和刪除按鈕的事件監聽器
-            addAdminButtonListeners();
+
+            addAdminButtonListeners(); // 重新綁定按鈕事件
         }
-        
-        /**
-         * 為後台列表的按鈕們加上事件監聽器
-         */
+
         function addAdminButtonListeners() {
+            // 移除舊的事件監聽器 (避免重複綁定，尤其是在 onSnapshot 更新時)
+            document.querySelectorAll('.view-images-btn').forEach(button => {
+                // 先檢查是否有監聽器，避免重複移除導致錯誤 (雖然 removeEventListener 處理了)
+                // button.removeEventListener('click', handleViewImages); // 這裡其實不需要手動移除，因為每次渲染都會替換整個 tbody
+            });
+             document.querySelectorAll('.edit-btn').forEach(button => {
+                 // button.removeEventListener('click', handleEdit);
+             });
+             document.querySelectorAll('.delete-btn').forEach(button => {
+                 // button.removeEventListener('click', handleDelete);
+             });
+
+
+            // 綁定新的事件監聽器 (因為 tbody 內容被 renderAdminList 完全替換，所以需要重新綁定)
+            document.querySelectorAll('.view-images-btn').forEach(button => {
+                button.addEventListener('click', handleViewImages);
+            });
             document.querySelectorAll('.edit-btn').forEach(button => {
                 button.addEventListener('click', handleEdit);
             });
             document.querySelectorAll('.delete-btn').forEach(button => {
                 button.addEventListener('click', handleDelete);
             });
+             console.log("商品列表按鈕事件監聽器已綁定。");
         }
 
-        // --- 事件處理函式 ---
 
-        /**
-         * 處理新增商品
-         */
-        function handleAdd(e) {
+        // --- 事件處理函式 (與 Firestore 互動) ---
+
+        async function handleAdd(e) {
             e.preventDefault();
-            const newProduct = {
-                id: Date.now(),
+            console.log("handleAdd triggered");
+
+            const imageUrlsText = document.getElementById('product-image-urls').value;
+            const imageUrls = imageUrlsText.split('\\n').map(url => url.trim()).filter(url => url);
+            console.log("Parsed Image URLs:", imageUrls);
+
+            const newProductData = {
                 name: document.getElementById('product-name').value,
                 sku: document.getElementById('product-sku').value,
                 price: parseFloat(document.getElementById('product-price').value),
                 stock: parseInt(document.getElementById('product-stock').value),
-                imageUrl: document.getElementById('product-image').value || `https://placehold.co/400x400/cccccc/333333?text=${document.getElementById('product-name').value}`,
+                imageUrls: imageUrls,
                 description: document.getElementById('product-description').value,
                 is_featured: document.getElementById('product-is-featured').checked,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp() // 記錄建立時間
             };
-            products.unshift(newProduct);
-            saveProducts(products);
-            renderAdminList();
-            addForm.reset();
+
+            console.log("Attempting to add product data:", newProductData);
+
+            try {
+                // 將新商品資料加入 Firestore
+                const docRef = await productsCollection.add(newProductData);
+                console.log("商品新增成功！Firestore document ID:", docRef.id);
+                alert("商品新增成功！"); // 新增成功提示
+                addForm.reset(); // 清空表單
+            } catch (error) {
+                console.error("新增商品時發生錯誤：", error);
+                // 顯示更詳細的錯誤給使用者
+                alert("新增商品失敗，請檢查控制台是否有錯誤訊息。\n錯誤：" + error.message);
+            }
         }
 
-        /**
-         * 處理編輯商品 (開啟 Modal)
-         */
-        function handleEdit(e) {
-            const id = parseInt(e.currentTarget.dataset.id);
-            const productToEdit = products.find(p => p.id === id);
-            
-            document.getElementById('edit-product-id').value = productToEdit.id;
-            document.getElementById('edit-product-name').value = productToEdit.name;
-            document.getElementById('edit-product-sku').value = productToEdit.sku;
-            document.getElementById('edit-product-price').value = productToEdit.price;
-            document.getElementById('edit-product-stock').value = productToEdit.stock;
-            document.getElementById('edit-product-image').value = productToEdit.imageUrl;
-            document.getElementById('edit-product-description').value = productToEdit.description;
-            document.getElementById('edit-product-is-featured').checked = productToEdit.is_featured;
+        async function handleEdit(e) {
+            const id = e.currentTarget.dataset.id; // Firestore document ID 是字串
+            console.log("Edit button clicked for ID:", id);
+            try {
+                const doc = await productsCollection.doc(id).get();
+                if (doc.exists) {
+                    const productToEdit = doc.data();
+                     console.log("Fetched product data for editing:", productToEdit);
+                    document.getElementById('edit-product-id').value = doc.id; // 儲存 document ID
+                    document.getElementById('edit-product-name').value = productToEdit.name || ''; // 處理 undefined
+                    document.getElementById('edit-product-sku').value = productToEdit.sku || ''; // 處理 undefined
+                    document.getElementById('edit-product-price').value = productToEdit.price !== undefined ? productToEdit.price : ''; // 處理 undefined
+                    document.getElementById('edit-product-stock').value = productToEdit.stock !== undefined ? productToEdit.stock : ''; // 處理 undefined
+                    document.getElementById('edit-product-image-urls').value = productToEdit.imageUrls && Array.isArray(productToEdit.imageUrls) ? productToEdit.imageUrls.join('\\n') : ''; // 處理 imageUrls 和 undefined
+                    document.getElementById('edit-product-description').value = productToEdit.description || ''; // 處理 undefined
+                    document.getElementById('edit-product-is-featured').checked = productToEdit.is_featured || false; // 處理 undefined
 
-            editModal.classList.add('is-open');
+                    editModal.classList.add('is-open');
+                     console.log("Edit modal opened.");
+                } else {
+                    console.error("找不到該商品文件！ID:", id);
+                    alert("找不到該商品，可能已被刪除。");
+                }
+            } catch (error) {
+                console.error("讀取商品資料時發生錯誤：", error);
+                alert("讀取商品資料失敗，請檢查控制台。");
+            }
         }
 
-        /**
-         * 處理儲存編輯後的商品
-         */
-        function handleSaveEdit(e) {
+         function handleViewImages(e) {
+            const id = e.currentTarget.dataset.id; // Firestore document ID 是字串
+            console.log("View images button clicked for ID:", id);
+             // 從目前的商品列表中找到對應的商品
+            const product = currentProductsData.find(p => p.id === id); // 使用全域變數 currentProductsData
+
+            if (!product || !product.imageUrls || product.imageUrls.length === 0) {
+                alert('此商品沒有圖片可供預覽。');
+                console.warn("No images found for product ID:", id);
+                return;
+            }
+            console.log("Opening image preview modal for product:", product.name);
+            openPreviewModal(product);
+        }
+
+
+        async function handleSaveEdit(e) {
             e.preventDefault();
-            const id = parseInt(document.getElementById('edit-product-id').value);
-            const productIndex = products.findIndex(p => p.id === id);
+            const id = document.getElementById('edit-product-id').value; // 取得 document ID
+             console.log("handleSaveEdit triggered for ID:", id);
 
-            if (productIndex > -1) {
-                products[productIndex] = {
-                    ...products[productIndex],
-                    name: document.getElementById('edit-product-name').value,
-                    sku: document.getElementById('edit-product-sku').value,
-                    price: parseFloat(document.getElementById('edit-product-price').value),
-                    stock: parseInt(document.getElementById('edit-product-stock').value),
-                    imageUrl: document.getElementById('edit-product-image').value,
-                    description: document.getElementById('edit-product-description').value,
-                    is_featured: document.getElementById('edit-product-is-featured').checked,
-                };
-            }
-            
-            saveProducts(products);
-            renderAdminList();
-            closeEditModal();
-        }
+            const imageUrlsText = document.getElementById('edit-product-image-urls').value;
+            const imageUrls = imageUrlsText.split('\\n').map(url => url.trim()).filter(url => url);
+             console.log("Parsed updated Image URLs:", imageUrls);
 
-        /**
-         * 處理刪除商品
-         */
-        function handleDelete(e) {
-            const id = parseInt(e.currentTarget.dataset.id);
-            const productName = products.find(p => p.id === id)?.name;
-            if (confirm(`確定要刪除商品「${productName}」嗎？此操作無法復原。`)) {
-                products = products.filter(p => p.id !== id);
-                saveProducts(products);
-                renderAdminList();
-            }
-        }
-        
-        /**
-         * 關閉編輯 Modal
-         */
-        function closeEditModal() {
-            editModal.classList.remove('is-open');
-        }
 
-        // --- 事件監聽器 ---
-        document.addEventListener('DOMContentLoaded', renderAdminList);
-        addForm.addEventListener('submit', handleAdd);
-        editForm.addEventListener('submit', handleSaveEdit);
-        cancelEditBtn.addEventListener('click', closeEditModal);
-        
-        editModal.addEventListener('click', (e) => {
-            if (e.target === editModal) {
-                closeEditModal();
-            }
-        });
-    </script>
-</body>
-</html>
+            const updatedProductData = {
+                name: document.getElementById('edit-product-name').value,
+                sku: document.getElementById('edit-product-sku').value,
+                price: parseFloat(document.getElementById('edit-product-price').value),
+                stock: parseInt(document.getElementById('edit-product-stock').value),
+                imageUrls: imageUrls,
+                description: document.getElementById('edit-product-description').value,
+                is_featured: document.getElementById('edit-product-is-featured').checked,
+                 updatedAt: firebase.firestore.FieldValue.serverTimestamp() // 記錄更新時間
+            };
+
+            console.log("Attempting to update product data for ID", id, ":", updatedProductData);
+
+            try {
+                // 更新 Firestore 中的商品文件
+                await productsCollection.doc(id).update(updatedProductData);
+                console.log("商品更新成功！Document ID:", id);
+                 alert("商品更新成功！"); // 新增成功提示
+                closeEdit
