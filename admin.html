@@ -124,6 +124,10 @@
                             <input type="checkbox" id="product-is-featured" class="h-5 w-5 text-indigo-600 rounded">
                             <span class="ml-2 text-gray-700">設為熱門商品</span>
                         </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="product-is-new" class="h-5 w-5 text-indigo-600 rounded">
+                            <span class="ml-2 text-gray-700">設為新品</span>
+                        </label>
                     </div>
                     <div class="col-span-1 md:col-span-2">
                          <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition duration-300">
@@ -136,7 +140,7 @@
 				<label for="searchProductName">搜尋商品名稱:</label>
 				<input type="text" id="searchProductName" placeholder="輸入商品名稱關鍵字">
 			</div>
-			
+
 
 			<div class="items-per-page-selector">
 				<label for="itemsPerPageSelect">每頁顯示:</label>
@@ -156,7 +160,9 @@
                                 <th class="p-4">SKU</th>
                                 <th class="p-4">價格</th>
                                 <th class="p-4">庫存</th>
-                                <th class="p-4">尺寸</th> <th class="p-4">狀態</th>
+                                <th class="p-4">尺寸</th>
+                                <th class="p-4">狀態</th>
+                                <th class="p-4">新品</th>
                                 <th class="p-4 text-center">操作</th>
                             </tr>
                         </thead>
@@ -165,7 +171,7 @@
                     </table>
                 </div>
             </div>
-			
+
 			<div id="paginationControls" class="pagination-controls">
 				</div>
 
@@ -189,6 +195,10 @@
                      <label class="flex items-center">
                          <input type="checkbox" id="edit-product-is-featured" class="h-5 w-5 text-indigo-600 rounded">
                          <span class="ml-2 text-gray-700">設為熱門商品</span>
+                     </label>
+                     <label class="flex items-center">
+                         <input type="checkbox" id="edit-product-is-new" class="h-5 w-5 text-indigo-600 rounded">
+                         <span class="ml-2 text-gray-700">設為新品</span>
                      </label>
                 </div>
                 <div class="mt-8 flex justify-end space-x-4">
@@ -268,7 +278,7 @@
 		let currentPage = 1;
 		// 每頁顯示的商品數量 - 改為 let
 		let itemsPerPage = 10; // 預設值，與 HTML select 中的 selected option 對應
-		
+
 		// --- 資料管理 (改為與 Firestore 互動) ---
 		// 這些變數可以在 DOMContentLoaded 外部宣告，因為它們是全域變數
 		let productIdToDelete = null; // 用於儲存待刪除商品的 Firestore document ID
@@ -308,8 +318,6 @@
 		  }
 
 
-		  // --- 核心功能函式 (全部定義在 DOMContentLoaded 內部) ---
-
 		  /**
 		   * 渲染後台商品列表
 		   * @param {Array<Object>} products - 從 Firestore 取得的商品資料陣列 (包含 Firestore document ID)
@@ -325,7 +333,7 @@
 			  currentProductsData = products; // 更新全域變數中的商品資料
 
 			  if (products.length === 0) {
-				  productListContainer.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>'; // 增加 colspan for new size column
+				  productListContainer.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>'; // Adjusted colspan for new column
 				  return;
 			  }
 
@@ -345,10 +353,14 @@
 					  <td class="p-4 text-gray-600">${product.sku || '無 SKU'}</td>
 					  <td class="p-4 text-gray-600">NT$ ${product.price !== undefined ? product.price.toLocaleString() : 'N/A'}</td>
 					  <td class="p-4 text-gray-600">${product.stock !== undefined ? product.stock : 'N/A'}</td>
-                      <td class="p-4">${sizesHtml}</td> <td class="p-4">
+                      <td class="p-4">${sizesHtml}</td>
+                      <td class="p-4">
 						  ${product.is_featured ? '<span class="bg-indigo-100 text-indigo-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">熱門</span>' : ''}
 						  ${product.stock > 0 ? '<span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">現貨</span>' : '<span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">售完</span>'}
 					  </td>
+                      <td class="p-4">
+                          ${product.is_new ? '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">新品</span>' : ''}
+                      </td>
 					  <td class="p-4 text-center">
 						  <button class="text-blue-600 hover:text-blue-800 p-2 view-images-btn" data-id="${product.id}" title="檢視圖片"><i class="fas fa-eye"></i></button>
 						  <button class="text-indigo-600 hover:text-indigo-800 p-2 edit-btn" data-id="${product.id}" title="編輯"><i class="fas fa-edit"></i></button>
@@ -485,6 +497,7 @@
                   sizes: sizes, // 新增尺寸到資料
 				  description: document.getElementById('product-description').value,
 				  is_featured: document.getElementById('product-is-featured').checked,
+                  is_new: document.getElementById('product-is-new').checked, // NEW: Include is_new
 				  createdAt: firebase.firestore.FieldValue.serverTimestamp()
 			  };
 
@@ -533,6 +546,7 @@
 					  document.getElementById('edit-product-image-urls').value = productToEdit.imageUrls && Array.isArray(productToEdit.imageUrls) ? productToEdit.imageUrls.join('\n') : '';
 					  document.getElementById('edit-product-description').value = productToEdit.description || '';
 					  document.getElementById('edit-product-is-featured').checked = productToEdit.is_featured || false;
+                      document.getElementById('edit-product-is-new').checked = productToEdit.is_new || false; // NEW: Populate is_new
 
 					  editModal.classList.add('is-open'); // <-- 使用在 DOMContentLoaded 內部取得的 editModal
 					   console.log("Edit modal opened.");
@@ -596,6 +610,7 @@
                   sizes: sizes, // 更新尺寸到資料
 				  description: document.getElementById('edit-product-description').value,
 				  is_featured: document.getElementById('edit-product-is-featured').checked,
+                  is_new: document.getElementById('edit-product-is-new').checked, // NEW: Include is_new
 				  updatedAt: firebase.firestore.FieldValue.serverTimestamp() // 新增更新時間戳
 			  };
 
@@ -947,7 +962,7 @@
 				 }));
 				 // 儲存從 Firestore 載入的所有商品資料 (原始完整列表)
 				 productsArray = products;
-				 
+
 				// 3. 初始化 currentFilteredProducts 為完整的列表
 				currentFilteredProducts = [...productsArray];
 
@@ -962,7 +977,7 @@
 				// 確保在 productsArray 填充並初次渲染後才呼叫
 				addSearchFunctionality();
 				addItemsPerPageSelectorListener(); // 啟用每頁顯示數量選擇功能
-				
+
 			 }, error => {
 				 console.error("監聽 Firestore 變化時發生錯誤：", error);
 				 // 可以考慮在 UI 上顯示錯誤訊息

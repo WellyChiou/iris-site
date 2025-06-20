@@ -471,7 +471,8 @@
             card.dataset.productId = product.id; // Store Firestore document ID
 
             let tagHtml = '';
-            if (product.tags && product.tags.includes('新品')) {
+            // Condition for "新品" tag: either '新品' in tags OR is_new is true
+            if ((product.tags && product.tags.includes('新品')) || product.is_new === true) {
                 tagHtml += '<span class="tag new">新品</span>';
             }
             // 檢查 is_featured 屬性來決定是否顯示熱門標籤
@@ -530,8 +531,10 @@
                 }));
                 allProductsData = products; // Store all fetched products globally
 
-                // Filter products for New Arrivals (e.g., based on '新品' tag or creation date)
-                const newArrivals = products.filter(p => p.tags && p.tags.includes('新品')).slice(0, 4); // Example: show top 4 new
+                // Filter products for New Arrivals (either based on '新品' tag OR is_new boolean)
+                const newArrivals = products.filter(p => 
+                    (p.tags && p.tags.includes('新品')) || p.is_new === true
+                ).slice(0, 4); // Example: show top 4 new
                 renderProducts(newArrivals, 'new-arrivals-products');
 
                 // Filter products for Popular Items based on is_featured attribute
