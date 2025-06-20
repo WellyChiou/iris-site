@@ -438,7 +438,7 @@
                           document.getElementById('edit-product-sku').value = productToEdit.sku || '';
                           document.getElementById('edit-product-price').value = productToEdit.price !== undefined ? productToEdit.price : '';
                           document.getElementById('edit-product-stock').value = productToEdit.stock !== undefined ? productToEdit.stock : '';
-                          document.getElementById('edit-product-image-urls').value = productToEdit.imageUrls && Array.isArray(productToEdit.imageUrls) ? productToEdit.imageUrls.join('\\n') : '';
+                          document.getElementById('edit-product-image-urls').value = productToEdit.imageUrls && Array.isArray(productToEdit.imageUrls) ? productToEdit.imageUrls.join('\n') : '';
                           document.getElementById('edit-product-description').value = productToEdit.description || '';
                           document.getElementById('edit-product-is-featured').checked = productToEdit.is_featured || false;
 
