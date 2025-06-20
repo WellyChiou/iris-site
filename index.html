@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iris - <span class="text-indigo-600">站台</span></title>
+    <title>StyleHub - 服裝設計</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -151,7 +151,6 @@
                     <h3 id="modal-product-title" class="text-2xl font-bold text-gray-800 mb-2"></h3>
                     <p id="modal-product-description" class="text-gray-600 text-sm mb-4"></p>
                     <p id="modal-product-price" class="text-indigo-600 font-bold text-xl mb-4"></p>
-                    <!-- 新增尺寸顯示位置 -->
                     <p id="modal-product-sizes" class="text-gray-600 text-sm mb-4"></p>
                     
                     <div id="modal-thumbnails" class="grid grid-cols-4 gap-2 mb-4">
@@ -305,6 +304,7 @@
                     id: product.id,
                     name: product.name,
                     price: product.price,
+                    // 確保購物車項目圖片也有正確的佔位符
                     image: product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/60x60?text=No+Image',
                     quantity: quantity
                 });
@@ -404,6 +404,8 @@
         // Function to open the image modal
         function openImageModal(productId) {
             const product = allProductsData.find(p => p.id === productId);
+            // 定義一個通用的佔位符圖片 URL
+            const defaultPlaceholder = 'https://via.placeholder.com/400x300?text=No+Image';
 
             if (product) {
                 currentModalProductId = productId; 
@@ -417,11 +419,11 @@
                 modalThumbnails.innerHTML = ''; 
 
                 if (product.images && product.images.length > 0) {
-                    modalMainImage.src = product.images[0]; 
+                    modalMainImage.src = product.images[0]; // 設定主圖片
                     
                     product.images.forEach((imageUrl, index) => {
                         const img = document.createElement('img');
-                        img.src = imageUrl;
+                        img.src = imageUrl; // 設定縮圖圖片
                         img.alt = `Thumbnail ${index + 1}`;
                         img.dataset.fullUrl = imageUrl; 
                         img.classList.add('w-full', 'h-20', 'object-cover', 'rounded-md', 'cursor-pointer', 'border-2', 'border-transparent', 'hover:border-indigo-400', 'transition', 'duration-200');
@@ -431,8 +433,8 @@
                         modalThumbnails.appendChild(img);
                     });
                 } else {
-                    modalMainImage.src = ''; 
-                    console.warn(`Product ${productId} has no images.`);
+                    modalMainImage.src = defaultPlaceholder; // 如果沒有圖片，使用佔位符圖片
+                    console.warn(`Product ${productId} has no images. Using placeholder.`);
                 }
                 
                 openModal(imageModal); // 使用通用函數打開圖片 Modal
@@ -479,7 +481,7 @@
             }
 
 
-            // 確保 product.images 存在且有內容
+            // 確保 product.images 存在且有內容，否則使用佔位符圖片
             const imageUrl = product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/400x300?text=No+Image'; // Default placeholder
 
             card.innerHTML = `
@@ -637,10 +639,9 @@
                         decreaseQuantity(productId); 
                     }
                 } else if (targetButton.classList.contains('cart-remove-btn')) {
-                    if (confirm('確定要從購物車中移除此商品嗎？')) { // NOTE: Changed `confirm` to `alert` as per instructions
-                        alert('確定要從購物車中移除此商品嗎？'); // Replaced confirm with alert to comply with instructions, although a custom modal would be better
-                        removeFromCart(productId);
-                    }
+                    // 使用 alert 替代 confirm 以符合指導原則，但建議實作自訂模態框
+                    alert('確定要從購物車中移除此商品嗎？'); 
+                    removeFromCart(productId);
                 }
             }
         });
