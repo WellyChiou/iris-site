@@ -196,21 +196,6 @@
         let currentProductsData = []; // 新增一個變數來儲存目前的商品資料 (用於編輯/刪除時查找名稱)
 
 
-        // --- DOM 元素 ---\
-        const adminProductList = document.getElementById('admin-product-list');
-        const addForm = document.getElementById('add-product-form');
-
-        const editModal = document.getElementById('edit-modal');
-        const editForm = document.getElementById('edit-product-form');
-        const cancelEditBtn = document.getElementById('cancel-edit');
-
-        const imagePreviewModal = document.getElementById('image-preview-modal');
-        const previewModalCloseButton = document.getElementById('preview-modal-close-button');
-
-        const deleteConfirmModal = document.getElementById('delete-confirm-modal');
-        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-
         // --- 核心功能函式 ---
 
         /**
@@ -219,7 +204,9 @@
          */
         function renderAdminList(products) {
             console.log("開始渲染商品列表，共", products.length, "項商品。");
-            adminProductList.innerHTML = '';
+            adminProductList.innerHTML = ''; // 清空現有列表
+            currentProductsData = products; // 更新全域變數中的商品資料
+
             if (products.length === 0) {
                 adminProductList.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>';
                 return;
@@ -254,20 +241,10 @@
         }
 
         function addAdminButtonListeners() {
-            // 移除舊的事件監聽器 (避免重複綁定，尤其是在 onSnapshot 更新時)
-            document.querySelectorAll('.view-images-btn').forEach(button => {
-                // 先檢查是否有監聽器，避免重複移除導致錯誤 (雖然 removeEventListener 處理了)
-                // button.removeEventListener('click', handleViewImages); // 這裡其實不需要手動移除，因為每次渲染都會替換整個 tbody
-            });
-             document.querySelectorAll('.edit-btn').forEach(button => {
-                 // button.removeEventListener('click', handleEdit);
-             });
-             document.querySelectorAll('.delete-btn').forEach(button => {
-                 // button.removeEventListener('click', handleDelete);
-             });
+            // 因為 renderAdminList 每次都會替換整個 tbody，所以舊的監聽器會被移除，
+            // 我們只需要綁定新的監聽器即可。
+             console.log("正在綁定商品列表按鈕事件...");
 
-
-            // 綁定新的事件監聽器 (因為 tbody 內容被 renderAdminList 完全替換，所以需要重新綁定)
             document.querySelectorAll('.view-images-btn').forEach(button => {
                 button.addEventListener('click', handleViewImages);
             });
@@ -277,18 +254,19 @@
             document.querySelectorAll('.delete-btn').forEach(button => {
                 button.addEventListener('click', handleDelete);
             });
-             console.log("商品列表按鈕事件監聽器已綁定。");
+             console.log("商品列表按鈕事件監聽器已綁定完成。");
         }
 
 
         // --- 事件處理函式 (與 Firestore 互動) ---
 
         async function handleAdd(e) {
-            e.preventDefault();
+            e.preventDefault(); // 阻止表單預設提交行為
             console.log("handleAdd triggered");
 
             const imageUrlsText = document.getElementById('product-image-urls').value;
-            const imageUrls = imageUrlsText.split('\\n').map(url => url.trim()).filter(url => url);
+            // 使用正則表達式分割，可以處理不同換行符號(\\n 或 \\r\\n)
+            const imageUrls = imageUrlsText.split(/\\r?\\n/).map(url => url.trim()).filter(url => url);
             console.log("Parsed Image URLs:", imageUrls);
 
             const newProductData = {
@@ -303,6 +281,14 @@
             };
 
             console.log("Attempting to add product data:", newProductData);
+
+            // 檢查必填欄位
+            if (!newProductData.name || !newProductData.sku || isNaN(newProductData.price) || isNaN(newProductData.stock)) {
+                alert("請填寫所有必填欄位 (商品名稱、SKU、價格、庫存)。");
+                console.warn("Missing required fields:", newProductData);
+                return; // 停止執行
+            }
+
 
             try {
                 // 將新商品資料加入 Firestore
@@ -363,12 +349,13 @@
 
 
         async function handleSaveEdit(e) {
-            e.preventDefault();
+            e.preventDefault(); // 阻止表單預設提交行為
             const id = document.getElementById('edit-product-id').value; // 取得 document ID
              console.log("handleSaveEdit triggered for ID:", id);
 
             const imageUrlsText = document.getElementById('edit-product-image-urls').value;
-            const imageUrls = imageUrlsText.split('\\n').map(url => url.trim()).filter(url => url);
+             // 使用正則表達式分割，可以處理不同換行符號(\\n 或 \\r\\n)
+            const imageUrls = imageUrlsText.split(/\\r?\\n/).map(url => url.trim()).filter(url => url);
              console.log("Parsed updated Image URLs:", imageUrls);
 
 
@@ -385,9 +372,370 @@
 
             console.log("Attempting to update product data for ID", id, ":", updatedProductData);
 
+             // 檢查必填欄位
+            if (!updatedProductData.name || !updatedProductData.sku || isNaN(updatedProductData.price) || isNaN(updatedProductData.stock)) {
+                alert("請填寫所有必填欄位 (商品名稱、SKU、價格、庫存)。");
+                console.warn("Missing required fields for update:", updatedProductData);
+                return; // 停止執行
+            }
+
+
             try {
-                // 更新 Firestore 中的商品文件
+                // 更新 Firestore 中的文件
                 await productsCollection.doc(id).update(updatedProductData);
-                console.log("商品更新成功！Document ID:", id);
-                 alert("商品更新成功！"); // 新增成功提示
-                closeEdit
+                console.log("商品更新成功！Firestore document ID:", id);
+                alert("商品更新成功！"); // 更新成功提示
+                closeEditModal(); // 關閉 Modal
+            } catch (error) {
+                console.error("更新商品時發生錯誤：", error);
+                alert("更新商品失敗，請檢查控制台是否有錯誤訊息。\n錯誤：" + error.message);
+            }
+        }
+
+
+        function handleDelete(e) {
+            const id = e.currentTarget.dataset.id; // Firestore document ID 是字串
+             // 找到對應的商品名稱，用於確認訊息
+            const product = currentProductsData.find(p => p.id === id);
+            const productName = product ? product.name : '此商品';
+
+            console.log("Delete button clicked for ID:", id);
+            productIdToDelete = id; // 儲存待刪除的 ID
+            document.getElementById('delete-confirm-text').textContent = `您確定要刪除 "${productName}" 這個商品嗎？此操作無法復原。`;
+            deleteConfirmModal.classList.add('is-open');
+             console.log("Delete confirmation modal opened for ID:", id);
+
+            // 這裡動態綁定確認刪除按鈕的事件，確保每次打開 Modal 都綁定到正確的 ID
+            // 先移除舊的監聽器 (如果存在)
+            const oldConfirmBtn = confirmDeleteBtn.cloneNode(true);
+            confirmDeleteBtn.parentNode.replaceChild(oldConfirmBtn, confirmDeleteBtn);
+            confirmDeleteBtn = oldConfirmBtn; // 更新 confirmDeleteBtn 變數引用
+
+            confirmDeleteBtn.addEventListener('click', handleConfirmDelete);
+             console.log("Confirm delete button event listener re-bound.");
+        }
+
+        async function handleConfirmDelete() {
+            if (!productIdToDelete) {
+                console.warn("沒有設定要刪除的商品 ID。");
+                return;
+            }
+            console.log("Confirm delete button clicked for ID:", productIdToDelete);
+
+            try {
+                // 從 Firestore 中刪除文件
+                await productsCollection.doc(productIdToDelete).delete();
+                console.log("商品刪除成功！Firestore document ID:", productIdToDelete);
+                alert("商品刪除成功！"); // 刪除成功提示
+                closeDeleteConfirmModal(); // 關閉 Modal
+                productIdToDelete = null; // 清除待刪除 ID
+            } catch (error) {
+                console.error("刪除商品時發生錯誤：", error);
+                alert("刪除商品失敗，請檢查控制台是否有錯誤訊息。\n錯誤：" + error.message);
+            }
+        }
+
+
+        // --- Modal 控制函式 ---
+
+        function closeEditModal() {
+            editModal.classList.remove('is-open');
+             console.log("Edit modal closed.");
+        }
+
+        function openPreviewModal(product) {
+             console.log("Opening image preview modal...");
+            const mainImage = document.getElementById('preview-modal-main-image');
+            const thumbnailsContainer = document.getElementById('preview-modal-thumbnails');
+            const productNameElement = document.getElementById('preview-modal-product-name');
+
+            productNameElement.textContent = product.name || '商品圖片預覽';
+            thumbnailsContainer.innerHTML = ''; // 清空縮圖
+
+            if (product.imageUrls && product.imageUrls.length > 0) {
+                // 預設顯示第一張圖片
+                mainImage.src = product.imageUrls[0];
+                mainImage.onerror = function() { this.src = 'https://placehold.co/600x400/cccccc/333333?text=Image+Not+Available'; };
+
+                product.imageUrls.forEach((url, index) => {
+                    const thumb = document.createElement('img');
+                    thumb.src = url;
+                     thumb.onerror = function() { this.src = 'https://placehold.co/48x48/cccccc/333333?text=N/A'; }; // 縮圖錯誤處理
+                    thumb.classList.add('w-16', 'h-16', 'object-cover', 'rounded-md', 'cursor-pointer', 'border-2', 'border-transparent', 'hover:border-indigo-500', 'transition');
+                    if (index === 0) {
+                        thumb.classList.add('thumbnail-active'); // 第一張預設為 active
+                    }
+                    thumb.addEventListener('click', () => {
+                        mainImage.src = url; // 點擊縮圖更換主圖
+                         mainImage.onerror = function() { this.src = 'https://placehold.co/600x400/cccccc/333333?text=Image+Not+Available'; }; // 主圖錯誤處理
+                        // 移除所有縮圖的 active 樣式
+                        thumbnailsContainer.querySelectorAll('img').forEach(img => img.classList.remove('thumbnail-active'));
+                        // 為當前點擊的縮圖添加 active 樣式
+					  });
+                      thumbnailsContainer.appendChild(thumb);
+                  });
+              } else {
+                  // 如果沒有圖片，顯示預設圖片並隱藏縮圖容器
+                  mainImage.src = 'https://placehold.co/600x400/cccccc/333333?text=No+Images';
+                  mainImage.onerror = null; // 避免無限循環
+                  thumbnailsContainer.innerHTML = '<p class="text-center text-gray-500">無縮圖</p>';
+              }
+
+              imagePreviewModal.classList.add('is-open');
+               console.log("Image preview modal opened.");
+          }
+
+          function closePreviewModal() {
+              imagePreviewModal.classList.remove('is-open');
+               console.log("Image preview modal closed.");
+          }
+
+          function closeDeleteConfirmModal() {
+              deleteConfirmModal.classList.remove('is-open');
+               console.log("Delete confirmation modal closed.");
+          }
+
+
+          // --- 初始化和事件綁定 ---
+
+          // 在 DOM 完全載入後執行
+          document.addEventListener('DOMContentLoaded', () => {
+              console.log("DOMContentLoaded 觸發，開始綁定事件...");
+
+              // --- DOM 元素 (在 DOMContentLoaded 內取得確保元素存在) ---
+              // 將需要用到的 DOM 元素都在這裡取得
+              const adminProductList = document.getElementById('admin-product-list'); // <-- 在這裡取得並宣告 adminProductList
+              const addForm = document.getElementById('add-product-form');
+              const editModal = document.getElementById('edit-modal');
+              const editForm = document.getElementById('edit-product-form');
+              const cancelEditBtn = document.getElementById('cancel-edit');
+              const imagePreviewModal = document.getElementById('image-preview-modal');
+              const previewModalCloseButton = document.getElementById('preview-modal-close-button');
+              let deleteConfirmModal = document.getElementById('delete-confirm-modal'); // 使用 let 因為需要重新賦值
+              let confirmDeleteBtn = document.getElementById('confirm-delete-btn'); // 使用 let 因為需要重新賦值
+              const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+
+
+              // --- 核心功能函式 (移至 DOMContentLoaded 內部) ---
+
+              /**
+               * 渲染後台商品列表
+               * @param {Array<Object>} products - 從 Firestore 取得的商品資料陣列 (包含 Firestore document ID)
+               */
+              function renderAdminList(products) { // <-- renderAdminList 定義在 DOMContentLoaded 內部
+                  console.log("開始渲染商品列表，共", products.length, "項商品。");
+                  // 因為 adminProductList 已經在同一個作用域中宣告並賦值，這裡可以直接使用
+                  if (adminProductList) { // 再次檢查確保元素存在，增加健壯性
+                      adminProductList.innerHTML = ''; // 清空現有列表
+                  } else {
+                      console.error("無法找到 adminProductList 元素來渲染列表！");
+                      return; // 無法渲染，停止執行
+                  }
+
+                  currentProductsData = products; // 更新全域變數中的商品資料
+
+                  if (products.length === 0) {
+                      adminProductList.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>';
+                      return;
+                  }
+
+                  products.forEach(product => {
+                      const row = document.createElement('tr');
+                      row.classList.add('border-b', 'hover:bg-gray-50');
+                      // 使用 product.id (Firestore document ID) 作為 data-id
+                      row.innerHTML = `
+                          <td class="p-4 flex items-center space-x-3">
+                              <img src="${product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : 'https://placehold.co/48x48/cccccc/333333?text=N/A'}" class="w-12 h-12 rounded-md object-cover" onerror="this.src='https://placehold.co/48x48/cccccc/333333?text=Img'">
+                              <span class="font-medium">${product.name || '無名稱'}</span>
+                          </td>
+                          <td class="p-4 text-gray-600">${product.sku || '無 SKU'}</td>
+                          <td class="p-4 text-gray-600">NT$ ${product.price !== undefined ? product.price.toLocaleString() : 'N/A'}</td>
+                          <td class="p-4 text-gray-600">${product.stock !== undefined ? product.stock : 'N/A'}</td>
+                          <td class="p-4">
+                              ${product.is_featured ? '<span class="bg-indigo-100 text-indigo-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">熱門</span>' : ''}
+                              ${product.stock > 0 ? '<span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">現貨</span>' : '<span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">售完</span>'}
+                          </td>
+                          <td class="p-4 text-center">
+                              <button class="text-blue-600 hover:text-blue-800 p-2 view-images-btn" data-id="${product.id}" title="檢視圖片"><i class="fas fa-eye"></i></button>
+                              <button class="text-indigo-600 hover:text-indigo-800 p-2 edit-btn" data-id="${product.id}" title="編輯"><i class="fas fa-edit"></i></button>
+                              <button class="text-red-600 hover:text-red-800 p-2 delete-btn" data-id="${product.id}" title="刪除"><i class="fas fa-trash"></i></button>
+                          </td>
+                      `;
+                      adminProductList.appendChild(row);
+                  });
+
+                  addAdminButtonListeners(); // 重新綁定按鈕事件 (此函式也移至內部)
+              }
+
+              function addAdminButtonListeners() { // <-- addAdminButtonListeners 定義在 DOMContentLoaded 內部
+                  // 因為 renderAdminList 每次都會替換整個 tbody，所以舊的監聽器會被移除，
+                  // 我們只需要綁定新的監聽器即可。
+                   console.log("正在綁定商品列表按鈕事件...");
+
+                  // 這裡使用 document，因為按鈕是動態生成的，document 始終存在
+                  document.querySelectorAll('.view-images-btn').forEach(button => {
+                      button.addEventListener('click', handleViewImages);
+                  });
+                  document.querySelectorAll('.edit-btn').forEach(button => {
+                      button.addEventListener('click', handleEdit);
+                  });
+                  document.querySelectorAll('.delete-btn').forEach(button => {
+                      button.addEventListener('click', handleDelete);
+                  });
+                   console.log("商品列表按鈕事件監聽器已綁定完成。");
+              }
+
+              // --- Modal 控制函式 (移至 DOMContentLoaded 內部，以便訪問 Modal 元素) ---
+
+              function closeEditModal() {
+                  if (editModal) {
+                      editModal.classList.remove('is-open');
+                      console.log("Edit modal closed.");
+                  } else {
+                      console.warn("找不到 editModal 元素。");
+                  }
+              }
+
+              function openPreviewModal(product) {
+                   console.log("Opening image preview modal...");
+                  const mainImage = document.getElementById('preview-modal-main-image');
+                  const thumbnailsContainer = document.getElementById('preview-modal-thumbnails');
+                  const productNameElement = document.getElementById('preview-modal-product-name');
+
+                  if (!imagePreviewModal || !mainImage || !thumbnailsContainer || !productNameElement) {
+                      console.error("無法找到圖片預覽 Modal 的必要元素。");
+                      return;
+                  }
+
+
+                  productNameElement.textContent = product.name || '商品圖片預覽';
+                  thumbnailsContainer.innerHTML = ''; // 清空縮圖
+
+                  if (product.imageUrls && product.imageUrls.length > 0) {
+                      // 預設顯示第一張圖片
+                      mainImage.src = product.imageUrls[0];
+                      mainImage.onerror = function() { this.src = 'https://placehold.co/600x400/cccccc/333333?text=Image+Not+Available'; };
+
+                      product.imageUrls.forEach((url, index) => {
+                          const thumb = document.createElement('img');
+                          thumb.src = url;
+                           thumb.onerror = function() { this.src = 'https://placehold.co/48x48/cccccc/333333?text=N/A'; }; // 縮圖錯誤處理
+                          thumb.classList.add('w-16', 'h-16', 'object-cover', 'rounded-md', 'cursor-pointer', 'border-2', 'border-transparent', 'hover:border-indigo-500', 'transition');
+                          if (index === 0) {
+                              thumb.classList.add('thumbnail-active'); // 第一張預設為 active
+                          }
+                          thumb.addEventListener('click', () => {
+                              mainImage.src = url; // 點擊縮圖更換主圖
+                               mainImage.onerror = function() { this.src = 'https://placehold.co/600x400/cccccc/333333?text=Image+Not+Available'; }; // 主圖錯誤處理
+                              // 移除所有縮圖的 active 樣式
+                              thumbnailsContainer.querySelectorAll('img').forEach(img => img.classList.remove('thumbnail-active'));
+                              // 為當前點擊的縮圖添加 active 樣式
+                              thumb.classList.add('thumbnail-active');
+                          });
+                          thumbnailsContainer.appendChild(thumb);
+                      });
+                  } else {
+                      // 如果沒有圖片，顯示預設圖片並隱藏縮圖容器
+                      mainImage.src = 'https://placehold.co/600x400/cccccc/333333?text=No+Images';
+                      mainImage.onerror = null; // 避免無限循環
+                      thumbnailsContainer.innerHTML = '<p class="text-center text-gray-500">無縮圖</p>';
+                  }
+
+                  imagePreviewModal.classList.add('is-open');
+                   console.log("Image preview modal opened.");
+              }
+
+              function closePreviewModal() {
+                  if (imagePreviewModal) {
+                      imagePreviewModal.classList.remove('is-open');
+                      console.log("Image preview modal closed.");
+                  } else {
+                      console.warn("找不到 imagePreviewModal 元素。");
+                  }
+              }
+
+              function closeDeleteConfirmModal() {
+                   if (deleteConfirmModal) {
+                      deleteConfirmModal.classList.remove('is-open');
+                      console.log("Delete confirmation modal closed.");
+                   } else {
+                       console.warn("找不到 deleteConfirmModal 元素。");
+                   }
+              }
+
+
+              // --- 綁定事件監聽器 (在 DOMContentLoaded 內綁定) ---
+
+              // 新增商品表單提交事件
+              if (addForm) { // 檢查 addForm 是否存在
+                  addForm.addEventListener('submit', handleAdd); // <-- 在這裡綁定 handleAdd 函式到 addForm 的 submit 事件
+                  console.log("新增商品表單 submit 事件已綁定 handleAdd。");
+              } else {
+                  console.error("找不到 ID 為 'add-product-form' 的元素，無法綁定新增事件！");
+              }
+
+
+              // 修改商品表單提交事件
+              if (editForm) {
+                  editForm.addEventListener('submit', handleSaveEdit);
+                   console.log("修改商品表單 submit 事件已綁定 handleSaveEdit。");
+              } else {
+                   console.error("找不到 ID 為 'edit-product-form' 的元素，無法綁定修改事件！");
+              }
+
+
+              // 取消編輯按鈕事件
+              if (cancelEditBtn) {
+                  cancelEditBtn.addEventListener('click', closeEditModal);
+                   console.log("取消編輯按鈕事件已綁定 closeEditModal。");
+              } else {
+                   console.warn("找不到 ID 為 'cancel-edit' 的元素。");
+              }
+
+
+              // 圖片預覽 Modal 關閉按鈕事件
+              if (previewModalCloseButton) {
+                  previewModalCloseButton.addEventListener('click', closePreviewModal);
+                   console.log("圖片預覽 Modal 關閉按鈕事件已綁定 closePreviewModal。");
+              } else {
+                   console.warn("找不到 ID 為 'preview-modal-close-button' 的元素。");
+              }
+
+
+              // 刪除確認 Modal 取消按鈕事件
+              if (cancelDeleteBtn) {
+                  cancelDeleteBtn.addEventListener('click', closeDeleteConfirmModal);
+                   console.log("取消刪除按鈕事件已綁定 closeDeleteConfirmModal。");
+              } else {
+                   console.warn("找不到 ID 為 'cancel-delete-btn' 的元素。");
+              }
+
+              // 注意：確認刪除按鈕 (confirmDeleteBtn) 的事件監聽器是動態綁定的，
+              // 在 handleDelete 函式中每次打開 Modal 時都會重新綁定。
+
+
+              // --- Firestore 監聽器 ---
+              // 監聽 'products' collection 的變化，並在資料更新時重新渲染列表
+              productsCollection.onSnapshot(snapshot => {
+                  console.log("Firestore 快照更新，共", snapshot.docs.length, "個文件。");
+                  const products = snapshot.docs.map(doc => ({
+                      id: doc.id, // 將 Firestore document ID 加入資料物件
+                      ...doc.data()
+                  }));
+                  console.log("處理後的商品資料 (包含 ID):", products);
+                  renderAdminList(products); // 重新渲染列表
+              }, error => {
+                  console.error("監聽 Firestore 變化時發生錯誤：", error);
+                  // 可以考慮在 UI 上顯示錯誤訊息
+                  // 例如：alert("讀取商品列表失敗，請檢查網路連線。");
+              });
+
+              console.log("Firestore 監聽器已設定。");
+              console.log("DOMContentLoaded 事件處理完成。");
+          }); // <-- DOMContentLoaded 結束
+
+
+      </script>
+
+  </body>
+  </html>
