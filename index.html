@@ -242,7 +242,6 @@
         const modalProductTitle = document.getElementById('modal-product-title');
         const modalProductDescription = document.getElementById('modal-product-description');
         const modalProductPrice = document.getElementById('modal-product-price');
-        // 獲取新的尺寸顯示元素
         const modalProductSizes = document.getElementById('modal-product-sizes'); 
         const modalAddToCartButton = document.getElementById('modal-add-to-cart-button'); 
 
@@ -412,7 +411,6 @@
                 modalProductTitle.textContent = product.name;
                 modalProductDescription.textContent = product.description;
                 modalProductPrice.textContent = `$${product.price.toLocaleString()}`;
-                // 在 Modal 中顯示商品尺寸
                 modalProductSizes.textContent = `尺寸: ${product.sizes && product.sizes.length > 0 ? product.sizes.join(', ') : 'N/A'}`;
 
 
@@ -471,12 +469,15 @@
             if (product.tags && product.tags.includes('新品')) {
                 tagHtml += '<span class="tag new">新品</span>';
             }
-            if (product.tags && product.tags.includes('限量')) {
-                tagHtml += '<span class="tag limited" style="left: 4.5rem;">限量</span>'; // Offset for multiple tags
+            // 檢查 is_featured 屬性來決定是否顯示熱門標籤
+            if (product.is_featured === true) {
+                 tagHtml += '<span class="tag popular" style="left: 4.5rem;">熱門</span>'; // Offset for multiple tags
             }
-            if (product.tags && product.tags.includes('熱門')) {
-                tagHtml += '<span class="tag popular" style="left: 8.5rem;">熱門</span>'; // Offset for multiple tags
+            // 只有當沒有熱門標籤時才考慮限量標籤的偏移
+            else if (product.tags && product.tags.includes('限量')) {
+                 tagHtml += '<span class="tag limited" style="left: 4.5rem;">限量</span>'; // Offset for multiple tags
             }
+
 
             // 確保 product.images 存在且有內容
             const imageUrl = product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/400x300?text=No+Image'; // Default placeholder
@@ -487,7 +488,6 @@
                 <div class="p-5">
                     <h3 class="text-xl font-semibold text-gray-800 mb-2 truncate">${product.name}</h3>
                     <p class="text-gray-600 text-sm mb-3 line-clamp-2">${product.description}</p>
-                    <!-- 在商品卡片中顯示尺寸 -->
                     <p class="text-gray-500 text-xs mb-2">尺寸: ${product.sizes && product.sizes.length > 0 ? product.sizes.join(', ') : 'N/A'}</p>
                     <div class="flex justify-between items-center">
                         <span class="text-indigo-600 font-bold text-lg">$${product.price.toLocaleString()}</span>
@@ -529,8 +529,8 @@
                 const newArrivals = products.filter(p => p.tags && p.tags.includes('新品')).slice(0, 4); // Example: show top 4 new
                 renderProducts(newArrivals, 'new-arrivals-products');
 
-                // Filter products for Popular Items (e.g., based on '熱門' tag or sales count)
-                const popularItems = products.filter(p => p.tags && p.tags.includes('熱門')).slice(0, 4); // Example: show top 4 popular
+                // Filter products for Popular Items based on is_featured attribute
+                const popularItems = products.filter(p => p.is_featured === true).slice(0, 4); // Filter by is_featured = true
                 renderProducts(popularItems, 'popular-items-products');
 
                 // Render all products
