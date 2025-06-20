@@ -525,10 +525,11 @@
         // Fetch products from Firestore
         document.addEventListener('DOMContentLoaded', () => {
             productsCollection.onSnapshot(snapshot => {
-                const products = snapshot.docs.map(doc => ({
+                let products = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
+				products = products.filter(p => p.is_discontinued !== true); 
                 allProductsData = products; // Store all fetched products globally
 
                 // Filter products for New Arrivals (either based on '新品' tag OR is_new boolean)
