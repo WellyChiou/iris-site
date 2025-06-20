@@ -304,8 +304,8 @@
                     id: product.id,
                     name: product.name,
                     price: product.price,
-                    // 確保購物車項目圖片也有正確的佔位符
-                    image: product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/60x60?text=No+Image',
+                    // 確保購物車項目圖片也有正確的佔位符，使用 imageUrls
+                    image: product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : 'https://via.placeholder.com/60x60?text=No+Image',
                     quantity: quantity
                 });
             }
@@ -417,12 +417,14 @@
 
 
                 modalThumbnails.innerHTML = ''; 
-				console.log('openImageModal product.images ' )
-				console.log(product.images )
-                if (product.images && product.images.length > 0) {
-                    modalMainImage.src = product.images[0]; // 設定主圖片
+				console.log('openImageModal product.imageUrls ' )
+				console.log(product.imageUrls )
+
+                // 檢查 imageUrls 陣列是否存在且有內容
+                if (product.imageUrls && product.imageUrls.length > 0) {
+                    modalMainImage.src = product.imageUrls[0]; // 設定主圖片
                     
-                    product.images.forEach((imageUrl, index) => {
+                    product.imageUrls.forEach((imageUrl, index) => {
                         const img = document.createElement('img');
                         img.src = imageUrl; // 設定縮圖圖片
                         img.alt = `Thumbnail ${index + 1}`;
@@ -482,8 +484,8 @@
             }
 
 
-            // 確保 product.images 存在且有內容，否則使用佔位符圖片
-            const imageUrl = product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/400x300?text=No+Image'; // Default placeholder
+            // 確保 product.imageUrls 存在且有內容，否則使用佔位符圖片
+            const imageUrl = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : 'https://via.placeholder.com/400x300?text=No+Image'; // Default placeholder
 
             card.innerHTML = `
                 ${tagHtml}
