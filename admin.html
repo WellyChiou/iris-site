@@ -268,9 +268,8 @@
         let itemsPerPage = 10; // 預設值，與 HTML select 中的 selected option 對應
 
         // --- 資料管理 (改為與 Firestore 互動) ---
-        // 這些變數可以在 DOMContentLoaded 外部宣告，因為它們是全域變數
         let productIdToDelete = null; // 用於儲存待刪除商品的 Firestore document ID
-        let currentProductsData = []; // 新增一個變數來儲存目前的商品資料 (用於編輯/刪除時查找名稱)
+        // currentProductsData 不再需要，因為直接從 productsArray 或 currentFilteredProducts 操作
 
 
         // !!! 新增 Firebase 認證檢查 !!!
@@ -375,13 +374,6 @@
             // 呼叫 renderPaginatedList 來顯示第一頁的內容和分頁控制項 (它會使用預設的 itemsPerPage)
             renderPaginatedList(currentFilteredProducts);
 
-            // 6. === 在這裡呼叫 addSearchFunctionality() 和 addItemsPerPageSelectorListener() ===
-            // 確保在 productsArray 填充並初次渲染後才呼叫
-            // 這些只需要綁定一次，所以只在 DOMContentLoaded 中調用
-            // addSearchFunctionality(); // 已經在 DOMContentLoaded 綁定過了
-            // addItemsPerPageSelectorListener(); // 已經在 DOMContentLoaded 綁定過了
-
-
          }, error => {
              console.error("監聽 Firestore 變化時發生錯誤：", error);
              alert("無法載入商品資料，請檢查網路連線或 Firebase 設定。");
@@ -414,14 +406,12 @@
 
           // 刪除確認 Modal 確認按鈕 (重新綁定，確保正確)
           // 移除舊的事件監聽器以避免重複
-          if (confirmDeleteBtn) {
+          if (confirmDeleteBtn) { // 確保元素存在才操作
               const oldConfirmDeleteBtn = confirmDeleteBtn;
               confirmDeleteBtn = oldConfirmDeleteBtn.cloneNode(true); // 複製節點以移除所有事件監聽器
               oldConfirmDeleteBtn.parentNode.replaceChild(confirmDeleteBtn, oldConfirmDeleteBtn); // 替換舊節點
-          } else {
-              console.warn("找不到 ID 為 'confirm-delete-btn' 的元素，無法綁定刪除確認事件。");
           }
-          if (confirmDeleteBtn) {
+          if (confirmDeleteBtn) { // 再次檢查，確保新節點存在
               confirmDeleteBtn.addEventListener('click', handleConfirmDelete);
           }
 
@@ -485,10 +475,16 @@
 
         // 渲染商品列表 (分頁後)
         function renderPaginatedList(productsToRender) {
+            const productListContainer = document.getElementById('product-list'); // 在函數內部再次獲取，確保每次都拿到最新元素
+            if (!productListContainer) {
+                console.error("renderPaginatedList: productListContainer 元素不存在。");
+                return;
+            }
+
             productListContainer.innerHTML = ''; // 清空現有內容
 
             if (productsToRender.length === 0) {
-                productListContainer.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-500">${searchInput.value ? '查無符合條件的商品。' : '目前沒有任何商品。'}</td></tr>`;
+                productListContainer.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-500">${document.getElementById('search-input').value ? '查無符合條件的商品。' : '目前沒有任何商品。'}</td></tr>`;
                 renderPaginationControls(0, 0); // 清空分頁控制項
                 return;
             }
@@ -533,7 +529,7 @@
         function renderPaginationControls(totalItems, itemsPerPage) {
             const paginationControls = document.getElementById('pagination-controls');
             if (!paginationControls) {
-                console.error("找不到 ID 為 'pagination-controls' 的元素。");
+                console.error("renderPaginationControls: paginationControls 元素不存在。");
                 return;
             }
             paginationControls.innerHTML = ''; // 清空現有分頁按鈕
