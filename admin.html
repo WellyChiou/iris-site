@@ -13,7 +13,8 @@
         body {
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
             background-color: #f8f9fa;
-            display: none; /* 預設隱藏 body，直到認證成功才顯示 */
+            /* 預設隱藏 body，直到 Firebase Auth 認證成功才顯示 */
+            display: none;
         }
         .modal {
             display: none;
@@ -27,43 +28,6 @@
             border-color: #4f46e5; /* indigo-600 */
             outline: 2px solid #4f46e5;
         }
-		/* 美化整個搜尋列容器 */
-		.search-bar {
-			display: flex;
-			align-items: center;
-			margin-bottom: 20px;
-		}
-
-		/* 美化搜尋列中的標籤 */
-		.search-bar label {
-			margin-right: 10px;
-			font-weight: bold;
-		}
-
-		/* 美化搜尋列中的輸入框 (結合了之前的樣式) */
-		.search-bar input[type="text"] {
-			padding: 8px 12px;
-			border: 1px solid #ccc;
-			border-radius: 4px;
-			font-size: 1rem;
-			line-height: 1.5;
-			box-sizing: border-box;
-			flex-grow: 1;
-			max-width: 300px;
-		}
-
-		/* 輸入框聚焦時的樣式 */
-		.search-bar input[type="text"]:focus {
-			outline: none;
-			border-color: #007bff;
-			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-		}
-
-		/* Placeholder 文字的樣式 */
-		.search-bar input[type="text"]::placeholder {
-			color: #999;
-			font-style: italic;
-		}
         .pagination-controls {
             margin-top: 20px;
             text-align: center;
@@ -84,37 +48,33 @@
             color: white;
             border-color: #4f46e5;
         }
+        
         /* 固定表頭 */
-        .table-container {
-            max-height: calc(100vh - 400px); /* Adjust based on your layout */
-            overflow-y: auto;
-            border: 1px solid #e2e8f0; /* border-gray-200 */
-            border-radius: 0.5rem; /* rounded-lg */
-            margin-top: 1.5rem; /* mt-6 */
-        }
-        .table-container table {
-            width: 100%;
-            border-collapse: separate; /* Required for sticky top + rounded corners */
-            border-spacing: 0;
-        }
-        .table-container thead th {
+        .fixed-header-table thead th {
             position: sticky;
-            top: 0;
+            top: 0; /* 固定在容器頂部 */
             background-color: #f3f4f6; /* bg-gray-100 */
-            z-index: 10;
-            white-space: nowrap;
+            z-index: 10; /* 確保表頭在滾動內容之上 */
+            white-space: nowrap; /* 避免表頭文字換行 */
         }
-        .table-container th, .table-container td {
-            padding: 1rem;
-            border-bottom: 1px solid #e2e8f0;
-            white-space: nowrap;
+        /* 確保單元格內容不換行，並允許水平滾動 */
+        .fixed-header-table th, .fixed-header-table td {
+            padding: 1rem; /* p-4 */
+            border-bottom: 1px solid #e2e8f0; /* border-gray-200 */
+            white-space: nowrap; /* 確保內容不換行，允許水平滾動 */
+            /* 設置最小寬度防止內容過長時擠壓過多 */
+            min-width: 100px; /* 根據內容調整此值 */
         }
-        .table-container tbody tr:last-child td {
-            border-bottom: none;
+        /* 商品名稱列可以更寬一點 */
+        .fixed-header-table td:first-child {
+            min-width: 180px; /* 例如給商品名稱列更多空間 */
+        }
+        .fixed-header-table tbody tr:last-child td {
+            border-bottom: none; /* 最後一行沒有底部邊框 */
         }
     </style>
 </head>
-<body>
+<body class="text-gray-800">
 
     <header class="bg-white shadow-md sticky top-0 z-40">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -134,7 +94,7 @@
 
     <main class="container mx-auto px-6 py-12">
 
-        <section id="admin-panel" class="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+        <section id="admin-panel" class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 max-h-[calc(100vh-100px)] overflow-y-auto">
             <h2 class="text-3xl font-bold mb-6 border-b pb-4">商品管理系統</h2>
 
             <div class="mb-8">
@@ -168,7 +128,7 @@
                     </div>
                 </form>
             </div>
-			<div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+            <div class="flex flex-wrap items-center justify-between mb-4 gap-4">
                 <div class="flex-grow">
                     <label for="searchProductName" class="sr-only">搜尋商品名稱:</label>
 				    <input type="text" id="searchProductName" placeholder="輸入商品名稱關鍵字" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
@@ -187,9 +147,7 @@
 
             <div>
                 <h3 class="text-xl font-semibold mb-4">管理現有商品</h3>
-                <div class="table-container">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-100">
+                <div class="overflow-x-auto rounded-lg border border-gray-200"> <table class="w-full text-left fixed-header-table"> <thead class="bg-gray-100">
                             <tr>
                                 <th class="p-4">商品</th>
                                 <th class="p-4">SKU</th>
@@ -635,7 +593,7 @@
               const productToDelete = currentProductsData.find(p => p.id === id);
 
               if (productToDelete) {
-                  openDeleteConfirmModal(productToDelete); // 使用新的函數
+                  openDeleteConfirmModal(productToDelete);
               } else {
                   console.warn("找不到 ID 為", id, "的商品來刪除。");
                   alert("找不到該商品來刪除。");
