@@ -169,6 +169,10 @@
                     <p id="modal-product-description" class="text-gray-600 text-sm mb-4"></p>
                     <p id="modal-product-price" class="text-indigo-600 font-bold text-xl mb-4"></p>
                     <p id="modal-product-sizes" class="text-gray-600 text-sm mb-4"></p>
+					<div class="mb-4">
+						<label for="modal-size-select" class="block text-sm font-medium text-gray-700 mb-1">選擇尺寸</label>
+						<select id="modal-size-select" class="w-full border-gray-300 rounded-md shadow-sm"></select>
+					</div>
                     
                     <div id="modal-thumbnails" class="grid grid-cols-4 gap-2 mb-4">
                         </div>
@@ -193,10 +197,20 @@
                 <p class="text-center text-gray-500">購物車是空的。</p>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-gray-200 flex justify-between items-center">
-                <span class="text-xl font-bold text-gray-800">總計: <span id="cart-total-price">$0</span></span>
-                <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-md transition duration-300">前往結帳</button>
-            </div>
+            <div class="mt-6 pt-4 border-t border-gray-200 flex justify-between items-center flex-wrap gap-2">
+				<span class="text-xl font-bold text-gray-800">總計: <span id="cart-total-price">$0</span></span>
+				<div class="flex gap-3">
+					<button id="clear-cart-button" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+						清空購物車
+					</button>
+					<!--
+					<button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-md transition duration-300">
+						前往結帳
+					</button>
+					-->
+				</div>
+			</div>
+
         </div>
     </div>
 
@@ -259,6 +273,7 @@
         const modalProductDescription = document.getElementById('modal-product-description');
         const modalProductPrice = document.getElementById('modal-product-price');
         const modalProductSizes = document.getElementById('modal-product-sizes'); 
+        const modalSizeSelect = document.getElementById('modal-size-select');
         const modalAddToCartButton = document.getElementById('modal-add-to-cart-button'); 
 
         // Cart Count Elements
@@ -303,7 +318,7 @@
         }
 
         // 添加商品到購物車
-        function addToCart(productId, quantity = 1) {
+        function addToCart(productId, quantity = 1,size = null) {
             const product = allProductsData.find(p => p.id === productId);
 
             if (!product) {
@@ -312,7 +327,8 @@
             }
 
             let cartItems = getCartItems();
-            const existingItemIndex = cartItems.findIndex(item => item.id === productId);
+			const existingItemIndex = cartItems.findIndex(item => item.id === productId && item.size === size);
+
 
             if (existingItemIndex > -1) {
                 cartItems[existingItemIndex].quantity += quantity;
@@ -321,6 +337,7 @@
                     id: product.id,
                     name: product.name,
                     price: product.price,
+					size: size, // 👈 儲存尺寸
                     // 確保購物車項目圖片也有正確的佔位符，使用 imageUrls
                     image: product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : 'https://via.placeholder.com/60x60?text=No+Image',
                     quantity: quantity
@@ -332,33 +349,25 @@
         }
 
         // 減少購物車商品數量
-        function decreaseQuantity(productId) {
-            let cartItems = getCartItems();
-            const existingItemIndex = cartItems.findIndex(item => item.id === productId);
+        function decreaseQuantity(productId, size = null) {
+			let cartItems = getCartItems();
+			const index = cartItems.findIndex(item => item.id === productId && item.size === size);
 
-            if (existingItemIndex > -1) {
-                if (cartItems[existingItemIndex].quantity > 1) {
-                    cartItems[existingItemIndex].quantity--;
-                    saveCartItems(cartItems);
-                } else {
-                    // 如果數量已經是1，則直接移除該商品
-                    removeFromCart(productId);
-                }
-            }
-        }
+			if (index > -1) {
+				if (cartItems[index].quantity > 1) {
+					cartItems[index].quantity--;
+				} else {
+					cartItems.splice(index, 1);
+				}
+				saveCartItems(cartItems);
+			}
+		}
 
         // 從購物車中移除商品
-        function removeFromCart(productId) {
+        function removeFromCart(productId,size) {
             let cartItems = getCartItems();
-            const initialLength = cartItems.length;
-            cartItems = cartItems.filter(item => item.id !== productId);
-            
-            if (cartItems.length < initialLength) {
-                saveCartItems(cartItems);
-                console.log(`商品ID為 ${productId} 的商品已從購物車中移除。`);
-            } else {
-                console.warn(`嘗試移除商品ID為 ${productId} 的商品，但未在購物車中找到。`);
-            }
+            cartItems = cartItems.filter(item => !(item.id === productId && item.size === size));
+			saveCartItems(cartItems);
         }
 
         // 渲染購物車 Modal 中的商品列表
@@ -380,16 +389,17 @@
                     <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded-md">
                     <div class="flex-1">
                         <h4 class="font-semibold text-gray-800">${item.name}</h4>
+						<p class="text-sm text-gray-600">尺寸: ${item.size || '未選擇'}</p>
                         <p class="text-sm text-gray-600">單價: $${item.price.toLocaleString()}</p>
                         <div class="flex items-center space-x-2 mt-1">
-                            <button class="cart-quantity-btn bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold w-6 h-6 rounded-full flex items-center justify-center" data-action="decrease" data-product-id="${item.id}">-</button>
+                            <button class="cart-quantity-btn bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold w-6 h-6 rounded-full flex items-center justify-center" data-action="decrease" data-product-id="${item.id}" data-size="${item.size}">-</button>
                             <span class="font-bold text-gray-800">${item.quantity}</span>
-                            <button class="cart-quantity-btn bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold w-6 h-6 rounded-full flex items-center justify-center" data-action="increase" data-product-id="${item.id}">+</button>
+                            <button class="cart-quantity-btn bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold w-6 h-6 rounded-full flex items-center justify-center" data-action="increase" data-product-id="${item.id}" data-size="${item.size}">+</button>
                         </div>
                     </div>
                     <div class="text-right">
                         <p class="text-indigo-600 font-bold text-lg">$${(item.price * item.quantity).toLocaleString()}</p>
-                        <button class="cart-remove-btn text-red-500 hover:text-red-700 text-lg ml-4" data-product-id="${item.id}" title="移除商品">
+                        <button class="cart-remove-btn text-red-500 hover:text-red-700 text-lg ml-4" data-product-id="${item.id}" data-size="${item.size}" title="移除商品">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -425,11 +435,16 @@
             const defaultPlaceholder = 'https://via.placeholder.com/400x300?text=No+Image';
 
             if (product) {
+				modalSizeSelect.innerHTML = '';
 				let stock = 0
 				let sizesHtml = 'N/A';
 				if (!product.sizes.empty) {
 					const validSizes = [];
 					product.sizes.forEach(data => {
+						const option = document.createElement('option');
+						option.value = data.size;
+						option.textContent = `${data.size} (庫存: ${data.quantity})`;
+						modalSizeSelect.appendChild(option);
 						//加總庫存
 						stock += data.quantity;
 						validSizes.push(`${data.size}(${data.quantity})`); // ✅ 儲存有效尺寸
@@ -553,9 +568,8 @@
 				  <i class="fas fa-ban mr-2"></i>已售完
 				</button>`
 			  : `<button class="add-to-cart-btn bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium py-2 px-4 rounded-md transition duration-300" data-product-id="${product.id}">
-				  <i class="fas fa-shopping-cart mr-2"></i>加入購物車
+				  <i class="fas fa-eye mr-2"></i>販售中
 				</button>`;
-
 			
             card.innerHTML = `
 			  ${tagHtml}
@@ -628,6 +642,7 @@
             const addToCartButtonOnCard = event.target.closest('.add-to-cart-btn'); 
 
             if (card) {
+				/**
                 if (addToCartButtonOnCard && addToCartButtonOnCard.dataset.productId === card.dataset.productId) {
                     // 如果點擊的是卡片上的「加入購物車」按鈕
                     addToCart(card.dataset.productId);
@@ -635,6 +650,8 @@
                     // 否則，打開 Modal
                     openImageModal(card.dataset.productId);
                 }
+				*/
+				openImageModal(card.dataset.productId);
             }
         });
         
@@ -653,8 +670,9 @@
 
         // 監聽 Modal 內的「加入購物車」按鈕
         modalAddToCartButton.addEventListener('click', () => {
+			const size = document.getElementById('modal-size-select').value;
             if (currentModalProductId) {
-                addToCart(currentModalProductId);
+                addToCart(currentModalProductId,1,size);
                 closeImageModal(); // 加入購物車後自動關閉圖片 Modal
             }
         });
@@ -697,10 +715,13 @@
 
         // 購物車列表內部按鈕的事件委派監聽器
         cartItemsList.addEventListener('click', (event) => {
-            const targetButton = event.target.closest('button'); 
+            const targetButton = event.target.closest('.cart-quantity-btn, .cart-remove-btn');
+
             
             if (targetButton) {
                 const productId = targetButton.dataset.productId;
+				const size = targetButton.dataset.size;
+				console.log('size',size)
                 if (!productId) {
                     return;
                 }
@@ -708,18 +729,30 @@
                 if (targetButton.classList.contains('cart-quantity-btn')) {
                     const action = targetButton.dataset.action;
                     if (action === 'increase') {
-                        addToCart(productId, 1); 
+                        addToCart(productId, 1, size); 
                     } else if (action === 'decrease') {
-                        decreaseQuantity(productId); 
+                        decreaseQuantity(productId, size); 
                     }
                 } else if (targetButton.classList.contains('cart-remove-btn')) {
                     // 使用 alert 替代 confirm 以符合指導原則，但建議實作自訂模態框
-                    alert('確定要從購物車中移除此商品嗎？'); 
-                    removeFromCart(productId);
+                    const confirmed = confirm('確定要從購物車中移除此商品嗎？');
+					if (confirmed) {
+						removeFromCart(productId, size);
+					}
                 }
             }
         });
+		const clearCartButton = document.getElementById('clear-cart-button');
 
+		clearCartButton.addEventListener('click', () => {
+			const confirmed = confirm('確定要清空購物車嗎？此操作無法復原。');
+			if (confirmed) {
+				localStorage.removeItem('cartItems');
+				updateCartCount();
+				renderCartItems();
+				alert('購物車已清空！');
+			}
+		});
     </script>
 </body>
 </html>
