@@ -103,8 +103,16 @@
                     <input type="text" id="product-name" placeholder="商品名稱" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                     <input type="text" id="product-sku" placeholder="商品編號 (SKU)" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                     <input type="number" id="product-price" placeholder="價格" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
-                    <input type="number" id="product-stock" placeholder="庫存數量" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
-                    <input type="text" id="product-sizes" placeholder="尺寸 (例如: S, M, L, XL)" class="p-3 border rounded-lg col-span-1 md:col-span-2 focus:ring-2 focus:ring-indigo-500">
+                    <input type="number" id="product-stock" placeholder="庫存數量" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" disabled>
+                    
+<div class="col-span-1 md:col-span-2">
+    <label class="block text-gray-700 mb-2 font-medium">尺寸與數量</label>
+    <div id="size-quantity-container" class="space-y-2"></div>
+    <button type="button" id="add-size-btn" class="mt-2 text-indigo-600 hover:underline">
+        ＋ 新增尺寸
+    </button>
+</div>
+
                     <textarea id="product-image-urls" placeholder="圖片網址 (一行一個)" class="p-3 border rounded-lg col-span-1 md:col-span-2 h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                     <textarea id="product-description" placeholder="商品描述" class="p-3 border rounded-lg col-span-1 md:col-span-2 h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                     <div class="col-span-1 md:col-span-2 flex items-center space-x-4">
@@ -184,8 +192,15 @@
                      <input type="text" id="edit-product-name" placeholder="商品名稱" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                      <input type="text" id="edit-product-sku" placeholder="商品編號 (SKU)" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                      <input type="number" id="edit-product-price" placeholder="價格" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
-                     <input type="number" id="edit-product-stock" placeholder="庫存數量" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
-                     <input type="text" id="edit-product-sizes" placeholder="尺寸 (例如: S, M, L, XL)" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+                     <input type="number" id="edit-product-stock" placeholder="庫存數量" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" disabled>
+<div class="col-span-1 md:col-span-2">
+    <label class="block text-gray-700 mb-2 font-medium">尺寸與數量</label>
+    <div class="space-y-2" id="edit-size-quantity-container"></div>
+    <button type="button" id="edit-add-size-btn" class="mt-2 text-indigo-600 hover:underline">＋ 新增尺寸</button>
+</div>
+
+
+
                      <textarea id="edit-product-image-urls" placeholder="圖片網址 (一行一個)" class="w-full p-3 border rounded-lg h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                      <textarea id="edit-product-description" placeholder="商品描述" class="w-full p-3 border rounded-lg h-24 focus:ring-2 focus:ring-indigo-500"></textarea>
                      <label class="flex items-center">
@@ -239,6 +254,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script>
+
+
         // 你的 Firebase 配置物件 (從 Firebase 控制台取得並貼到這裡)
         const firebaseConfig = {
           apiKey: "AIzaSyB7JlDaqB3dm9hpuXrLmxHNr9lBKDznkD0",
@@ -292,6 +309,9 @@
 
         // 在 DOM 完全載入後執行
         document.addEventListener('DOMContentLoaded', () => {
+    var editSizeContainer = document.getElementById('edit-size-quantity-container');
+    var editAddSizeBtn = document.getElementById('edit-add-size-btn');
+    var editStockInput = document.getElementById('edit-product-stock');
           console.log("DOMContentLoaded 觸發，開始綁定事件...");
 
           // 獲取登出按鈕
@@ -439,16 +459,24 @@
               const imageUrlsText = document.getElementById('product-image-urls').value;
               const imageUrls = imageUrlsText.split(/\r?\n/).map(url => url.trim()).filter(url => url);
 
-              const sizesText = document.getElementById('product-sizes').value;
-              const sizes = sizesText.split(',').map(size => size.trim()).filter(size => size);
 
-              const newProductData = {
+              
+    const sizesAndQuantities = Array.from(document.querySelectorAll('#size-quantity-container > div')).map(row => {
+        return {
+            size: row.querySelector('.size-input').value,
+            quantity: parseInt(row.querySelector('.quantity-input').value)
+        };
+    });
+
+
+    const newProductData = {
                   name: document.getElementById('product-name').value,
                   sku: document.getElementById('product-sku').value,
                   price: parseFloat(document.getElementById('product-price').value),
-                  stock: parseInt(document.getElementById('product-stock').value),
+				  //不需要紀錄
+                  //stock: parseInt(document.getElementById('product-stock').value),
                   imageUrls: imageUrls,
-                  sizes: sizes,
+                  sizes: sizesAndQuantities,
                   description: document.getElementById('product-description').value,
                   is_featured: document.getElementById('product-is-featured').checked,
                   is_new: document.getElementById('product-is-new').checked,
@@ -497,15 +525,30 @@
                       document.getElementById('edit-product-name').value = productToEdit.name || '';
                       document.getElementById('edit-product-sku').value = productToEdit.sku || '';
                       document.getElementById('edit-product-price').value = productToEdit.price !== undefined ? productToEdit.price : '';
-                      document.getElementById('edit-product-stock').value = productToEdit.stock !== undefined ? productToEdit.stock : '';
-                      document.getElementById('edit-product-sizes').value = (productToEdit.sizes && Array.isArray(productToEdit.sizes)) ? productToEdit.sizes.join(', ') : '';
-                      document.getElementById('edit-product-image-urls').value = productToEdit.imageUrls && Array.isArray(productToEdit.imageUrls) ? productToEdit.imageUrls.join('\n') : '';
+                      document.getElementById('edit-product-stock').value = productToEdit.stock !== undefined ? productToEdit.stock : '';document.getElementById('edit-product-image-urls').value = productToEdit.imageUrls && Array.isArray(productToEdit.imageUrls) ? productToEdit.imageUrls.join('\n') : '';
                       document.getElementById('edit-product-description').value = productToEdit.description || '';
                       document.getElementById('edit-product-is-featured').checked = productToEdit.is_featured || false;
                       document.getElementById('edit-product-is-new').checked = productToEdit.is_new || false;
                       document.getElementById('edit-product-is-discontinued').checked = productToEdit.is_discontinued || false;
 
-                      editModal.classList.add('is-open');
+                      
+// addEditSizeRow
+        
+        editSizeContainer.innerHTML = '';
+        const sizeSnapshot = productToEdit.sizes;
+        console.log('讀取 sizes 子集合，筆數：', sizeSnapshot.size);
+        if (sizeSnapshot.empty) {
+            console.warn('沒有找到尺寸資料');
+        } else {
+            sizeSnapshot.forEach(data => {
+                const size = data.size || '';
+                const quantity = data.quantity || 0;
+                addEditSizeRow(size, quantity);
+            });
+        }
+        updateEditTotalStock();
+    editModal.classList.add('is-open');
+
                       console.log("Edit modal opened.");
                   } else {
                       console.error("找不到該商品文件！ID:", id);
@@ -550,16 +593,23 @@
               const imageUrlsText = document.getElementById('edit-product-image-urls').value;
               const imageUrls = imageUrlsText.split(/\r?\n/).map(url => url.trim()).filter(url => url);
 
-              const sizesText = document.getElementById('edit-product-sizes').value;
-              const sizes = sizesText.split(',').map(size => size.trim()).filter(size => size);
 
-              const updatedProductData = {
+              
+const sizesAndQuantities = Array.from(document.querySelectorAll('#edit-size-quantity-container > div')).map(row => {
+    return {
+        size: row.querySelector('.size-input').value,
+        quantity: parseInt(row.querySelector('.quantity-input').value)
+    };
+});
+
+const updatedProductData = {
                   name: document.getElementById('edit-product-name').value,
                   sku: document.getElementById('edit-product-sku').value,
                   price: parseFloat(document.getElementById('edit-product-price').value),
-                  stock: parseInt(document.getElementById('edit-product-stock').value),
+                  // 不需要紀錄
+				  //stock: parseInt(document.getElementById('edit-product-stock').value),
                   imageUrls: imageUrls,
-                  sizes: sizes,
+                  sizes: sizesAndQuantities,
                   description: document.getElementById('edit-product-description').value,
                   is_featured: document.getElementById('edit-product-is-featured').checked,
                   is_new: document.getElementById('edit-product-is-new').checked,
@@ -569,14 +619,24 @@
 
               console.log("Attempting to update product ID:", productId, "with data:", updatedProductData);
 
-              if (!updatedProductData.name || !updatedProductData.sku || isNaN(updatedProductData.price) || isNaN(updatedProductData.stock)) {
-                   alert("請填寫所有必填欄位 (商品名稱、SKU、價格、庫存)。");
+              if (!updatedProductData.name || !updatedProductData.sku || isNaN(updatedProductData.price)) {
+                   alert("請填寫所有必填欄位 (商品名稱、SKU、價格)。");
                    console.warn("Missing required fields for update:", updatedProductData);
                    return;
                }
 
               try {
-                  await productsCollection.doc(productId).update(updatedProductData);
+                  
+await productsCollection.doc(productId).update(updatedProductData);
+
+// 更新 productSizes 子集合：先刪除全部，再重建
+const sizeCollRef = productsCollection.doc(productId).collection('sizes');
+const existing = await sizeCollRef.get();
+const deletions = existing.docs.map(doc => doc.ref.delete());
+await Promise.all(deletions);
+const additions = sizesAndQuantities.map(sq => sizeCollRef.add(sq));
+await Promise.all(additions);
+
                   console.log("商品更新成功！ID:", productId);
                   alert("商品更新成功！");
                   closeEditModal();
@@ -641,11 +701,21 @@
 				  productListContainer.innerHTML = '<tr><td colspan="10" class="p-4 text-center text-gray-500">目前沒有商品</td></tr>';
 				  return;
 			  }
-
 			  products.forEach(product => {
-                  const sizesHtml = (product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0)
-                      ? product.sizes.map(size => `<span class="bg-gray-200 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded mr-1">${size}</span>`).join('')
-                      : '<span class="text-gray-400 text-xs">無</span>';
+					let stock = 0;
+				  let sizesHtml = '<span class="text-gray-400 text-xs">無</span>';
+					if (!product.sizes.empty) {
+					  const validSizes = [];
+					  product.sizes.forEach(data => {
+				  console.log("data.quantity;",data.quantity);
+						//加總庫存
+						stock += data.quantity;
+						  validSizes.push(`${data.size}(${data.quantity})`); // ✅ 儲存有效尺寸
+					  });
+					  if (validSizes.length > 0) {
+						sizesHtml = validSizes.join('<br>');
+					  }
+					}
 
 				  const row = document.createElement('tr');
 				  row.classList.add('border-b', 'hover:bg-gray-50');
@@ -656,10 +726,10 @@
 					  </td>
 					  <td class="p-4 text-gray-600">${product.sku || '無 SKU'}</td>
 					  <td class="p-4 text-gray-600">NT$ ${product.price !== undefined ? product.price.toLocaleString() : 'N/A'}</td>
-					  <td class="p-4 text-gray-600">${product.stock !== undefined ? product.stock : 'N/A'}</td>
+					  <td class="p-4 text-gray-600">${stock}</td>
                       <td class="p-4">${sizesHtml}</td>
                       <td class="p-4">
-                          ${product.stock > 0 ? '<span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">現貨</span>' : '<span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">售完</span>'}
+                          ${stock > 0 ? '<span class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">現貨</span>' : '<span class="bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">售完</span>'}
 					  </td>
                       <td class="p-4"> ${product.is_featured ? '<span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">熱門</span>' : '<span class="bg-gray-100 text-gray-500 text-xs font-semibold px-2.5 py-0.5 rounded-full">一般</span>'}
                       </td>
@@ -909,7 +979,79 @@
 		  }
 
 
-		  console.log("DOMContentLoaded 事件處理完成。");
+		  
+// === 尺寸新增/刪除 & 庫存自動加總 ===
+const sizeContainer = document.getElementById('size-quantity-container');
+const addSizeBtn = document.getElementById('add-size-btn');
+const stockInput = document.getElementById('product-stock');
+
+function updateTotalStock() {
+    const quantityInputs = sizeContainer.querySelectorAll('.quantity-input');
+    let total = 0;
+    quantityInputs.forEach(input => {
+        const val = parseInt(input.value);
+        total += isNaN(val) ? 0 : val;
+    });
+    stockInput.value = total;
+}
+
+addSizeBtn.addEventListener('click', () => {
+    const div = document.createElement('div');
+    div.className = 'flex items-center space-x-2';
+    div.innerHTML = `
+        <input type="text" placeholder="尺寸 (例如：M)" class="size-input p-2 border rounded w-1/2" required>
+        <input type="number" placeholder="數量" class="quantity-input p-2 border rounded w-1/3" min="0" value="0" required>
+        <button type="button" class="text-red-600 remove-size-btn">移除</button>
+    `;
+    sizeContainer.appendChild(div);
+    div.querySelector('.remove-size-btn').addEventListener('click', () => {
+        div.remove();
+        updateTotalStock();
+    });
+    div.querySelector('.quantity-input').addEventListener('input', updateTotalStock);
+    updateTotalStock();
+});
+
+
+
+function addEditSizeRow(size = '', quantity = 0) {
+    const div = document.createElement('div');
+    div.className = 'flex items-center space-x-2';
+    div.innerHTML = `
+        <input type="text" placeholder="尺寸" class="size-input p-2 border rounded w-1/2" value="${size}" required>
+        <input type="number" placeholder="數量" class="quantity-input p-2 border rounded w-1/3" min="0" value="${quantity}" required>
+        <button type="button" class="text-red-600 remove-size-btn">移除</button>
+    `;
+    editSizeContainer.appendChild(div);
+    div.querySelector('.remove-size-btn').addEventListener('click', () => {
+        div.remove();
+        updateEditTotalStock();
+    });
+    div.querySelector('.quantity-input').addEventListener('input', updateEditTotalStock);
+}
+
+if (editAddSizeBtn) {
+    editAddSizeBtn.addEventListener('click', () => {
+        addEditSizeRow();
+        updateEditTotalStock();
+    });
+}
+
+
+// === 編輯商品尺寸欄位 ===
+function updateEditTotalStock() {
+    const quantityInputs = editSizeContainer.querySelectorAll('.quantity-input');
+    let total = 0;
+    quantityInputs.forEach(input => {
+        const val = parseInt(input.value);
+        total += isNaN(val) ? 0 : val;
+    });
+    editStockInput.value = total;
+}
+
+
+
+console.log("DOMContentLoaded 事件處理完成。");
 		});
 
       </script>
