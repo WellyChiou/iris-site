@@ -103,7 +103,7 @@
                     <input type="text" id="product-name" placeholder="商品名稱" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                     <input type="text" id="product-sku" placeholder="商品編號 (SKU)" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                     <input type="number" id="product-price" placeholder="價格" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
-                    <input type="number" id="product-stock" placeholder="庫存數量" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" disabled>
+                    <input type="text" id="product-stock" placeholder="庫存數量" class="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" disabled>
                     
 <div class="col-span-1 md:col-span-2">
     <label class="block text-gray-700 mb-2 font-medium">尺寸與數量</label>
@@ -192,7 +192,7 @@
                      <input type="text" id="edit-product-name" placeholder="商品名稱" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                      <input type="text" id="edit-product-sku" placeholder="商品編號 (SKU)" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
                      <input type="number" id="edit-product-price" placeholder="價格" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" required>
-                     <input type="number" id="edit-product-stock" placeholder="庫存數量" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" disabled>
+                     <input type="text" id="edit-product-stock" placeholder="庫存數量" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" disabled>
 <div class="col-span-1 md:col-span-2">
     <label class="block text-gray-700 mb-2 font-medium">尺寸與數量</label>
     <div class="space-y-2" id="edit-size-quantity-container"></div>
@@ -531,9 +531,6 @@
                       document.getElementById('edit-product-is-new').checked = productToEdit.is_new || false;
                       document.getElementById('edit-product-is-discontinued').checked = productToEdit.is_discontinued || false;
 
-                      
-// addEditSizeRow
-        
         editSizeContainer.innerHTML = '';
         const sizeSnapshot = productToEdit.sizes;
         console.log('讀取 sizes 子集合，筆數：', sizeSnapshot.size);
@@ -707,7 +704,6 @@ await Promise.all(additions);
 					if (!product.sizes.empty) {
 					  const validSizes = [];
 					  product.sizes.forEach(data => {
-				  console.log("data.quantity;",data.quantity);
 						//加總庫存
 						stock += data.quantity;
 						  validSizes.push(`${data.size}(${data.quantity})`); // ✅ 儲存有效尺寸
@@ -992,7 +988,7 @@ function updateTotalStock() {
         const val = parseInt(input.value);
         total += isNaN(val) ? 0 : val;
     });
-    stockInput.value = total;
+	stockInput.value = total;
 }
 
 addSizeBtn.addEventListener('click', () => {
@@ -1046,7 +1042,11 @@ function updateEditTotalStock() {
         const val = parseInt(input.value);
         total += isNaN(val) ? 0 : val;
     });
-    editStockInput.value = total;
+	if (total == 0){
+		editStockInput.value = '無庫存';
+	}else{
+		editStockInput.value = total;
+	}
 }
 
 
